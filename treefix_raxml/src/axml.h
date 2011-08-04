@@ -29,6 +29,9 @@
  *  Bioinformatics 2006; doi: 10.1093/bioinformatics/btl446
  */
 
+#ifndef AXML_H
+#define AXML_H
+
 #include <assert.h>
 
 #ifdef PARALLEL
@@ -958,3 +961,16 @@ extern void optRateCat_LOCAL(tree *localTree, int lower, int upper, double lower
 
 extern void masterBarrier(int jobType, tree *tr);
 #endif
+
+// if SWIG
+extern void get_args(int argc, char *argv[], analdef *adef, tree *tr);
+extern void makeFileNames(void);
+extern boolean makeweights (analdef *adef, rawdata *rdta, cruncheddata *cdta, tree *tr);
+extern boolean makevalues(rawdata *rdta, cruncheddata *cdta, tree *tr, analdef *adef);
+extern void initAdef(analdef *adef);
+extern void readData(analdef *adef, rawdata *rdta, cruncheddata *cdta, tree *tr);
+extern void checkOutgroups(tree *tr, analdef *adef);
+extern void checkSequences(tree *tr, rawdata *rdta, analdef *adef);
+// endif SWIG
+
+#endif // AXML_H
