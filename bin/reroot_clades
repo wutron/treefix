@@ -1,0 +1,190 @@
+#!/usr/bin/env python
+
+import os, sys, optparse
+
+from rasmus import treelib, util, timer
+from rasmus.bio import phylo
+
+import treefix
+from treefix import common
+
+usage = "usage: %prog [options] <gene tree> ..."
+parser = optparse.OptionParser(usage=usage)
+
+grp_io = optparse.OptionGroup(parser, "Input/Output")
+common.add_common_options(grp_io,
+                          infiles=True, reroot=True,
+			  stree=True, smap=True,
+			  clade=True)
+grp_io.add_option("-o","--oldext", dest="oldext",
+                  metavar="<old tree file extension>",
+                  default=".tree",
+                  help="old tree file extension (default: \".tree\")")
+grp_io.add_option("-n","--newext", dest="newext",
+                  metavar="<new tree file extension>",
+                  default=".reroot.tree",
+                  help="new tree file extension (default: \".reroot.tree\")")
+parser.add_option_group(grp_io)
+
+grp_info = optparse.OptionGroup(parser, "Information")
+grp_info.add_option("-V", "--verbose", dest="verbose",
+                    metavar="<verbosity level>",
+                    default="0", choices=["0","1","2","3"],
+                    help="verbosity level (0=quiet, 1=low, 2=medium, 3=high)")
+grp_info.add_option("-l", "--log", dest="log",
+                    metavar="<log file>",
+                    default="-",
+                    help="log filename.  Use '-' to display on stdout.")
+parser.add_option_group(grp_info)
+
+options, args = parser.parse_args()
+
+#=============================
+# check arguments
+
+# required options
+common.check_req_options(parser, options)
+
+# determine gene tree files
+treefiles = common.get_input_files(parser, options, args)
+if len(treefiles) == 0:
+    parser.error("must specify input file(s)")
+
+#=============================
+# functions
+
+def label_tree_clades(gtree, recon, clades):
+    # find all subclades by finding all branches separating clade,
+    # e.g. node is in subtree of clade but parent node is not
+
+    if options.verbose >= 1: log.start("Labeling tree clades")
+    
+    nodes = {}
+    for cname, clade in clades.iteritems():
+        for node in gtree.preorder():
+            if (node.parent) and \
+               (recon[node] in clade) and (recon[node.parent] not in clade):
+	        nodes[node] = cname
+
+    if options.verbose >= 1: log.stop()
+        
+    return nodes
+
+
+def process_tree(gtree, stree, gene2species,
+                 recon, events, clades):
+    nodes = label_tree_clades(gtree, recon, clades)
+
+    if options.verbose >= 1: log.start("Processing clades")
+    
+    # for each branch
+    for node,cname in nodes.iteritems():
+        # get subtree (skip if subtree has single leaf)
+        subtree = treelib.subtree(gtree, node)
+        nleaves = len(subtree.leaves())
+        if nleaves == 1:
+            continue
+
+        if options.verbose >= 2:
+            cost = phylo.count_dup_loss(gtree, stree, recon, events)
+
+        # reroot
+        phylo.recon_root(subtree, stree, gene2species, newCopy=False)
+        newrecon = phylo.reconcile(subtree, stree, gene2species)
+        newevents = phylo.label_events(subtree, newrecon)
+
+        gtree.replace_tree(node, subtree)   # can also use set_tree_topology
+
+        # update reconciliation and events
+        del recon[node]
+        del events[node]
+        for node1 in subtree:
+            recon[node1] = newrecon[node1]
+            events[node1] = newevents[node1]    
+
+        if options.verbose >= 2:
+            newcost = phylo.count_dup_loss(gtree, stree, recon, events)
+            log.log("Rerooted %s (%s) -- oldcost: %d, newcost: %d" % (node.name, cname, cost, newcost))
+            
+    if options.verbose >= 1: log.stop()
+
+
+def output_tree(gtree, out, single_tree):
+    if single_tree:
+        gtree.write(out)
+    else:
+        gtree.write(out, oneline=True); out.write('\n')
+
+#=============================
+# read species tree and species map
+stree = treelib.read_tree(options.stree)
+gene2species = phylo.read_gene2species(options.smap)
+
+# read clades
+clades = common.read_clades(options.clade, stree)
+
+# log file
+if options.verbose >= 1:
+    if options.log == "-":
+        log = timer.globalTimer()
+    else:
+        outlog = util.open_stream(options.log, "w")
+        log = timer.Timer(outlog)
+
+# process genes trees
+for treefile in treefiles:
+    if options.verbose >= 1: log.start("Working on file '%s'" % treefile)
+    
+    # setup files
+    outfile = util.replace_ext(treefile, options.oldext, options.newext)    
+    out = util.open_stream(outfile, "w")
+    
+    # read trees
+    gtrees = treelib.read_trees(treefile)
+    single_tree = len(gtrees) == 1
+    
+    for treendx, gtree in enumerate(gtrees):
+        if options.verbose >= 1: log.start("Working on file '%s', tree %d" % (treefile, treendx))
+        
+        # special case: no rerooting needed
+        if len(gtree.leaves()) <= 2:
+            if options.verbose >= 1:
+                log.log("tree size <= 2 -- reroot skipped")
+                log.stop()
+            output_tree(gtree, out, single_tree)
+	    continue
+
+        # remove bootstraps if present
+        for node in gtree:
+            if "boot" in node.data:
+                del node.data["boot"]
+                
+        # reroot
+        if options.reroot:
+            phylo.recon_root(gtree, stree, gene2species, newCopy=False)
+
+        # reconcile
+        recon = phylo.reconcile(gtree, stree, gene2species)
+        events = phylo.label_events(gtree, recon)
+
+        # process (identify and reroot subclades)
+        process_tree(gtree, stree, gene2species, recon, events, clades)
+
+        # don't trust branch lengths anymore
+        for node in gtree:
+            node.dist = 0
+
+        #  final reroot
+        phylo.recon_root(gtree, stree, gene2species, newCopy=False)
+
+        # output rerooted tree
+	output_tree(gtree, out, single_tree)
+
+    # close output stream
+    out.close()
+
+    if options.verbose >= 1: log.stop(); log.log("\n\n")
+
+# close log
+if options.verbose >= 1 and options.log != "-":
+    outlog.close()

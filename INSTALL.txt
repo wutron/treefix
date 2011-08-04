@@ -1,0 +1,41 @@
+TreeFix
+http://compbio.mit.edu/treefix/
+Yi-Chieh Wu, with libraries contributed from Matthew Rasmussen
+
+=============================================================================
+DEPENDENCIES
+
+TreeFix has the following requirements:
+
+- Python (2.5.4) -- http://python.org/
+
+The following programs are optional:
+- Numpy (1.5.1) -- http://numpy.scipy.org/
+  If Numpy is not found, the program uses Python's built-in 'random' module.
+
+Additionally, a python module is required for computing the test statistic for
+likelihood equivalence.  We have provided one using RAxML at 
+http://compbio.mit.edu/treefix/raxml.
+
+=============================================================================
+INSTALL
+
+Run "python setup.py install".
+
+If you don't have permission to install software on your system, you can install
+into another directory using the --prefix or --home flags to setup.py.
+
+For example
+::
+python setup.py install --prefix=/home/username/python
+or
+python setup.py install --home=~
+::
+
+If you didn't install in the standard bin directory
+you will need to set your PATH variable to the alternate location.
+
+If you didn't install in the standard Python site-packages directory
+you will need to set your PYTHONPATH variable to the alternate location.
+See http://docs.python.org/inst/search-path.html for further details.
+
