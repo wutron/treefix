@@ -1101,7 +1101,7 @@ static void sitecombcrunch (rawdata *rdta, cruncheddata *cdta, tree *tr, analdef
 } 
 
 
-static boolean makeweights (analdef *adef, rawdata *rdta, cruncheddata *cdta, tree *tr)    
+boolean makeweights (analdef *adef, rawdata *rdta, cruncheddata *cdta, tree *tr)    
 {
   int  i;
 
@@ -1121,7 +1121,7 @@ static boolean makeweights (analdef *adef, rawdata *rdta, cruncheddata *cdta, tr
 
 
 
-static boolean makevalues(rawdata *rdta, cruncheddata *cdta, tree *tr, analdef *adef)   
+boolean makevalues(rawdata *rdta, cruncheddata *cdta, tree *tr, analdef *adef)   
 {   
   int  i, j, model, fullSites = 0, modelCounter;   
 
@@ -1271,7 +1271,7 @@ static int sequenceSimilarity(char *tipJ, char *tipK, int n)
   return 1;
 }
 
-static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
+void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 {
   int n = tr->mxtips + 1; 
   int i, j;
@@ -1289,7 +1289,7 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
   FILE *f;  
 
 
-  if(processID == 0)	      
+  if(processID == 0) 
     f = fopen(infoFileName, "a");
   else
     f = (FILE *)NULL; 
@@ -1309,7 +1309,8 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 	    if(processID == 0)
 	      {
 		printf("Sequence names of taxon %d and %d are identical, they are both called %s\n", i, j, tr->nameList[i]);
-		fprintf(f, "Sequence names of taxon %d and %d are identical, they are both called %s\n", i, j, tr->nameList[i]);
+		if (f != NULL)
+		  fprintf(f, "Sequence names of taxon %d and %d are identical, they are both called %s\n", i, j, tr->nameList[i]);
 	      }
 	  }
     }
@@ -1319,8 +1320,11 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
       if(processID == 0)
 	{
 	  printf("ERROR: Found %d taxa that had equal names in the alignment, exiting...\n", countNameDuplicates);
-	  fprintf(f, "ERROR: Found %d taxa that had equal names in the alignment, exiting...\n", countNameDuplicates);
-	  fclose(f);
+	  if (f != NULL)
+	    {
+	       fprintf(f, "ERROR: Found %d taxa that had equal names in the alignment, exiting...\n", countNameDuplicates);
+	       fclose(f);
+	    }
 	}
       errorExit(-1);
     }
@@ -1344,8 +1348,9 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 	    {
 	      printf("ERROR: Sequence %s consists entirely of undetermined values which will be treated as missing data\n",      
 		     tr->nameList[i]);
-	      fprintf(f, "ERROR: Sequence %s consists entirely of undetermined values which will be treated as missing data\n",      
-		      tr->nameList[i]);	      
+	      if (f != NULL)
+	        fprintf(f, "ERROR: Sequence %s consists entirely of undetermined values which will be treated as missing data\n",      
+		        tr->nameList[i]);	      
 	    }
 	  countOnlyGaps++;
 	}
@@ -1357,8 +1362,11 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
       if(processID == 0)
 	{
 	  printf("ERROR: Found %d sequences that consist entirely of undetermined values, exiting...\n", countOnlyGaps);
-	  fprintf(f, "ERROR: Found %d sequences that consist entirely of undetermined values, exiting...\n", countOnlyGaps);
-	  fclose(f);
+	  if (f != NULL)
+	    {
+	      fprintf(f, "ERROR: Found %d sequences that consist entirely of undetermined values, exiting...\n", countOnlyGaps);
+	      fclose(f);
+	    }
 	}
       errorExit(-1);
     }
@@ -1386,7 +1394,8 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 	    {
 	      printf("IMPORTANT WARNING: Alignment column %d contains only undetermined values which will be treated as missing data\n", 
 		     i);
-	      fprintf(f, "IMPORTANT WARNING: Alignment column %d contains only undetermined values which will be treated as missing data\n", i);
+	      if (f != NULL)
+	        fprintf(f, "IMPORTANT WARNING: Alignment column %d contains only undetermined values which will be treated as missing data\n", i);
 	    }
 	  countUndeterminedColumns++;	  
 	}
@@ -1417,7 +1426,8 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 		      if(processID == 0)
 			{
 			  printf("\n\nIMPORTANT WARNING: Sequences %s and %s are exactly identical\n", tr->nameList[i], tr->nameList[j]);
-			  fprintf(f, "\n\nIMPORTANT WARNING: Sequences %s and %s are exactly identical\n", tr->nameList[i], tr->nameList[j]);
+			  if (f != NULL)
+			      fprintf(f, "\n\nIMPORTANT WARNING: Sequences %s and %s are exactly identical\n", tr->nameList[i], tr->nameList[j]);
 			}
 		      omissionList[j] = 1;
 		      count++;
@@ -1443,12 +1453,15 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 	      printf("Found %d %s that %s exactly identical to other sequences in the alignment.\n", count, (count == 1)?"sequence":"sequences", (count == 1)?"is":"are");
 	      printf("Normally they should be excluded from the analysis.\n\n");
 	      
-	      fprintf(f, "\n");
+	      if (f != NULL)
+	        {
+		  fprintf(f, "\n");
 	      
-	      fprintf(f, "IMPORTANT WARNING\n");
+	          fprintf(f, "IMPORTANT WARNING\n");
 	      
-	      fprintf(f, "Found %d %s that %s exactly identical to other sequences in the alignment.\n", count, (count == 1)?"sequence":"sequences", (count == 1)?"is":"are");
-	      fprintf(f, "Normally they should be excluded from the analysis.\n\n");
+	          fprintf(f, "Found %d %s that %s exactly identical to other sequences in the alignment.\n", count, (count == 1)?"sequence":"sequences", (count == 1)?"is":"are");
+	          fprintf(f, "Normally they should be excluded from the analysis.\n\n");
+	        }
 	    }
 	}
       
@@ -1464,13 +1477,16 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 		     countUndeterminedColumns, (countUndeterminedColumns == 1)?"column":"columns", (countUndeterminedColumns == 1)?"contains":"contain");
 	      printf("Normally these columns should be excluded from the analysis.\n\n");
 	      
-	      fprintf(f, "\n");
+	      if (f != NULL)
+	        {
+		  fprintf(f, "\n");
 	      
-	      fprintf(f, "IMPORTANT WARNING\n");
+	          fprintf(f, "IMPORTANT WARNING\n");
 	      
-	      fprintf(f, "Found %d %s that %s only undetermined values which will be treated as missing data.\n", 
-		      countUndeterminedColumns, (countUndeterminedColumns == 1)?"column":"columns", (countUndeterminedColumns == 1)?"contains":"contain");
-	      fprintf(f, "Normally these columns should be excluded from the analysis.\n\n");      	  
+	          fprintf(f, "Found %d %s that %s only undetermined values which will be treated as missing data.\n", 
+		          countUndeterminedColumns, (countUndeterminedColumns == 1)?"column":"columns", (countUndeterminedColumns == 1)?"contains":"contain");
+	          fprintf(f, "Normally these columns should be excluded from the analysis.\n\n");      	  
+	        }
 	    }
 	}
 
@@ -1490,9 +1506,12 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 	      printf("\nJust in case you might need it, a mixed model file with \n");
 	      printf("model assignments for undetermined columns removed is printed to file %s\n",noDupModels);
 
-	      fprintf(f, "\nJust in case you might need it, a mixed model file with \n");
-	      fprintf(f, "model assignments for undetermined columns removed is printed to file %s\n",noDupModels);
-	      
+	      if (f != NULL)
+	        {
+		  fprintf(f, "\nJust in case you might need it, a mixed model file with \n");
+	          fprintf(f, "model assignments for undetermined columns removed is printed to file %s\n",noDupModels);
+		}
+
  
 	      for(i = 0; i < tr->NumberOfModels; i++)
 		{
@@ -1573,8 +1592,11 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 		  printf("\n A mixed model file with model assignments for undetermined\n");
 		  printf("columns removed has already been printed to  file %s\n",noDupModels);
 
-		  fprintf(f, "\n A mixed model file with model assignments for undetermined\n");
-		  fprintf(f, "columns removed has already been printed to  file %s\n",noDupModels);
+		  if (f != NULL)
+		    {
+		      fprintf(f, "\n A mixed model file with model assignments for undetermined\n");
+		      fprintf(f, "columns removed has already been printed to  file %s\n",noDupModels);
+		    }
 		}	      
 	    }
 	     
@@ -1591,14 +1613,17 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 	      if(count && countUndeterminedColumns)
 		printf("sequence duplicates and undetermined columns removed is printed to file %s\n", noDupFile);
 	      
-	      fprintf(f, "Just in case you might need it, an alignment file with \n");
-	      if(count && !countUndeterminedColumns)
-		fprintf(f, "sequence duplicates removed is printed to file %s\n", noDupFile);
-	      if(!count && countUndeterminedColumns)
-		fprintf(f, "undetermined columns removed is printed to file %s\n", noDupFile);
-	      if(count && countUndeterminedColumns)
-		fprintf(f, "sequence duplicates and undetermined columns removed is printed to file %s\n", noDupFile);
-	      
+	      if (f != NULL)
+	        {
+		  fprintf(f, "Just in case you might need it, an alignment file with \n");
+	          if(count && !countUndeterminedColumns)
+		    fprintf(f, "sequence duplicates removed is printed to file %s\n", noDupFile);
+	          if(!count && countUndeterminedColumns)
+		    fprintf(f, "undetermined columns removed is printed to file %s\n", noDupFile);
+	          if(count && countUndeterminedColumns)
+		    fprintf(f, "sequence duplicates and undetermined columns removed is printed to file %s\n", noDupFile);
+	        }
+
 	      newFile = fopen(noDupFile, "w");
 	      
 	      fprintf(newFile, "%d %d\n", tr->mxtips - count, rdta->sites - countUndeterminedColumns);
@@ -1645,24 +1670,27 @@ static void checkSequences(tree *tr, rawdata *rdta, analdef *adef)
 	      
 	      printf("been printed to file %s\n",  noDupFile);
 	      
-	      if(count && !countUndeterminedColumns)
-		fprintf(f, "An alignment file with sequence duplicates removed has already\n");
-	      if(!count && countUndeterminedColumns)
-		fprintf(f, "An alignment file with undetermined columns removed has already\n");
-	      if(count && countUndeterminedColumns)
-		fprintf(f, "An alignment file with undetermined columns and sequence duplicates removed has already\n");
+	      if (f != NULL)
+	        {
+	          if(count && !countUndeterminedColumns)
+		    fprintf(f, "An alignment file with sequence duplicates removed has already\n");
+	          if(!count && countUndeterminedColumns)
+		    fprintf(f, "An alignment file with undetermined columns removed has already\n");
+	          if(count && countUndeterminedColumns)
+		    fprintf(f, "An alignment file with undetermined columns and sequence duplicates removed has already\n");
 	      
-	      fprintf(f, "been printed to file %s\n",  noDupFile);
+	          fprintf(f, "been printed to file %s\n",  noDupFile);
+	        }
 	    }
 	}
     }
 
-
   free(undeterminedList);
   free(omissionList);
   free(modelList);
-  if(processID == 0)	      
-    fclose(f);
+  if(processID == 0)
+    if (f != NULL)
+      fclose(f);
 }
 
 
@@ -2083,7 +2111,8 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 	    if(processID == 0)
 	      {
 		printf("Sequence names of taxon %d and %d are identical, they are both called %s\n", i, j, tr->nameList[i]);
-		fprintf(f, "Sequence names of taxon %d and %d are identical, they are both called %s\n", i, j, tr->nameList[i]);
+		if (f != NULL)
+		  fprintf(f, "Sequence names of taxon %d and %d are identical, they are both called %s\n", i, j, tr->nameList[i]);
 	      }
 	  }
     }
@@ -2093,8 +2122,11 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
       if(processID == 0)
 	{
 	  printf("ERROR: Found %d taxa that had equal names in the alignment, exiting...\n", countNameDuplicates);
-	  fprintf(f, "ERROR: Found %d taxa that had equal names in the alignment, exiting...\n", countNameDuplicates);
-	  fclose(f);
+	  if (f != NULL)
+	    {
+	      fprintf(f, "ERROR: Found %d taxa that had equal names in the alignment, exiting...\n", countNameDuplicates);
+	      fclose(f);
+	    }
 	}
       errorExit(-1);
     }
@@ -2117,7 +2149,8 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 	  if(processID == 0)
 	    {
 	      printf("ERROR: Sequence %s consists entirely of undetermined values which will be treated as missing data\n",      tr->nameList[i]);
-	      fprintf(f, "ERROR: Sequence %s consists entirely of undetermined values which will be treated as missing data\n",      tr->nameList[i]);	      
+	      if (f != NULL)
+	        fprintf(f, "ERROR: Sequence %s consists entirely of undetermined values which will be treated as missing data\n",      tr->nameList[i]);	      
 	    }
 	  countOnlyGaps++;
 	}
@@ -2129,8 +2162,11 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
       if(processID == 0)
 	{
 	  printf("ERROR: Found %d sequences that consist entirely of undetermined values, exiting...\n", countOnlyGaps);
-	  fprintf(f, "ERROR: Found %d sequences that consist entirely of undetermined values, exiting...\n", countOnlyGaps);
-	  fclose(f);
+	  if (f != NULL)
+	    {
+	      fprintf(f, "ERROR: Found %d sequences that consist entirely of undetermined values, exiting...\n", countOnlyGaps);
+	      fclose(f);
+	    }
 	}
       errorExit(-1);
     }
@@ -2157,7 +2193,8 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 	  if(processID == 0)
 	    {
 	      printf("IMPORTANT WARNING: Alignment column %d contains only undetermined values which will be treated as missing data\n", i);
-	      fprintf(f, "IMPORTANT WARNING: Alignment column %d contains only undetermined values which will be treated as missing data\n", i);
+	      if (f != NULL)
+	        fprintf(f, "IMPORTANT WARNING: Alignment column %d contains only undetermined values which will be treated as missing data\n", i);
 	    }
 	  countUndeterminedColumns++;	  
 	}
@@ -2261,9 +2298,12 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 	      
 	      printf("Found %d non-trival clusters, reduction to %d sequences\n", nonTrivial, numberOfClusters);
 	      
-	      fprintf(f, "\n");
+	      if (f != NULL)
+	        {
+		  fprintf(f, "\n");
 	      
-	      fprintf(f, "Found %d non-trival clusters, reduction to %d sequences\n", nonTrivial, numberOfClusters);
+	          fprintf(f, "Found %d non-trival clusters, reduction to %d sequences\n", nonTrivial, numberOfClusters);
+	        }
 	    }
 	}
       
@@ -2279,13 +2319,16 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 		     countUndeterminedColumns, (countUndeterminedColumns == 1)?"column":"columns", (countUndeterminedColumns == 1)?"contains":"contain");
 	      printf("Normally these columns should be excluded from the analysis.\n\n");
 	      
-	      fprintf(f, "\n");
+	      if (f != NULL)
+	        {
+		  fprintf(f, "\n");
 	      
-	      fprintf(f, "IMPORTANT WARNING\n");
+	          fprintf(f, "IMPORTANT WARNING\n");
 	      
-	      fprintf(f, "Found %d %s that %s only undetermined values which will be treated as missing data.\n", 
-		      countUndeterminedColumns, (countUndeterminedColumns == 1)?"column":"columns", (countUndeterminedColumns == 1)?"contains":"contain");
-	      fprintf(f, "Normally these columns should be excluded from the analysis.\n\n");      	  
+	          fprintf(f, "Found %d %s that %s only undetermined values which will be treated as missing data.\n", 
+		          countUndeterminedColumns, (countUndeterminedColumns == 1)?"column":"columns", (countUndeterminedColumns == 1)?"contains":"contain");
+	          fprintf(f, "Normally these columns should be excluded from the analysis.\n\n");      	  
+	        }
 	    }
 	}
 
@@ -2310,9 +2353,12 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 	      printf("\nJust in case you might need it, a mixed model file with \n");
 	      printf("model assignments for undetermined columns removed is printed to file %s\n",noDupModels);
 
-	      fprintf(f, "\nJust in case you might need it, a mixed model file with \n");
-	      fprintf(f, "model assignments for undetermined columns removed is printed to file %s\n",noDupModels);
-	      
+	      if (f != NULL)
+	        {
+		  fprintf(f, "\nJust in case you might need it, a mixed model file with \n");
+	          fprintf(f, "model assignments for undetermined columns removed is printed to file %s\n",noDupModels);
+	        }
+
  
 	      for(i = 0; i < tr->NumberOfModels; i++)
 		{
@@ -2393,8 +2439,11 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 		  printf("\n A mixed model file with model assignments for undetermined\n");
 		  printf("columns removed has already been printed to  file %s\n",noDupModels);
 
-		  fprintf(f, "\n A mixed model file with model assignments for undetermined\n");
-		  fprintf(f, "columns removed has already been printed to  file %s\n",noDupModels);
+		  if (f != NULL)
+		    {
+		      fprintf(f, "\n A mixed model file with model assignments for undetermined\n");
+		      fprintf(f, "columns removed has already been printed to  file %s\n",noDupModels);
+		    }
 		}	      
 	    }
 	     
@@ -2411,14 +2460,17 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 	      if(nonTrivial && countUndeterminedColumns)
 		printf("similar sequences and undetermined columns removed is printed to file %s\n", noDupFile);
 	      
-	      fprintf(f, "Just in case you might need it, an alignment file with \n");
-	      if(nonTrivial && !countUndeterminedColumns)
-		fprintf(f, "similar sequences removed is printed to file %s\n", noDupFile);
-	      if(!nonTrivial && countUndeterminedColumns)
-		fprintf(f, "undetermined columns removed is printed to file %s\n", noDupFile);
-	      if(nonTrivial && countUndeterminedColumns)
-		fprintf(f, "similar sequences and undetermined columns removed is printed to file %s\n", noDupFile);
-	      
+	      if (f != NULL)
+	        {
+		  fprintf(f, "Just in case you might need it, an alignment file with \n");
+	          if(nonTrivial && !countUndeterminedColumns)
+		    fprintf(f, "similar sequences removed is printed to file %s\n", noDupFile);
+	          if(!nonTrivial && countUndeterminedColumns)
+		    fprintf(f, "undetermined columns removed is printed to file %s\n", noDupFile);
+	          if(nonTrivial && countUndeterminedColumns)
+		    fprintf(f, "similar sequences and undetermined columns removed is printed to file %s\n", noDupFile);
+	        }
+
 	      newFile = fopen(noDupFile, "w");
 	      
 	      fprintf(newFile, "%d %d\n", numberOfClusters, rdta->sites - countUndeterminedColumns);
@@ -2462,14 +2514,17 @@ static void reduceBySequenceSimilarity(tree *tr, rawdata *rdta, analdef *adef)
 	      
 	      printf("been printed to file %s\n",  noDupFile);
 	      
-	      if(nonTrivial && !countUndeterminedColumns)
-		fprintf(f, "An alignment file with similar sequences removed has already\n");
-	      if(!nonTrivial && countUndeterminedColumns)
-		fprintf(f, "An alignment file with undetermined columns removed has already\n");
-	      if(nonTrivial && countUndeterminedColumns)
-		fprintf(f, "An alignment file with undetermined columns and similar sequences removed has already\n");
+	      if (f != NULL)
+	        {
+	          if(nonTrivial && !countUndeterminedColumns)
+		    fprintf(f, "An alignment file with similar sequences removed has already\n");
+	          if(!nonTrivial && countUndeterminedColumns)
+		    fprintf(f, "An alignment file with undetermined columns removed has already\n");
+	          if(nonTrivial && countUndeterminedColumns)
+		    fprintf(f, "An alignment file with undetermined columns and similar sequences removed has already\n");
 	      
-	      fprintf(f, "been printed to file %s\n",  noDupFile);
+	          fprintf(f, "been printed to file %s\n",  noDupFile);
+	        }
 	    }
 	}
     }
@@ -2791,7 +2846,7 @@ void freeNodex(tree *tr)
     }
 }
 
-static void initAdef(analdef *adef)
+void initAdef(analdef *adef)
 {
  
   adef->bootstrapBranchLengths = FALSE;
@@ -3240,7 +3295,7 @@ static int mygetopt(int argc, char **argv, char *opts, int *optind, char **optar
   return(c);
   }
 
-static void checkOutgroups(tree *tr, analdef *adef)
+void checkOutgroups(tree *tr, analdef *adef)
 {
   if(adef->outgroup)
     {
@@ -3575,7 +3630,7 @@ static void printREADME(void)
 }
 
 
-static void get_args(int argc, char *argv[], analdef *adef, tree *tr)
+void get_args(int argc, char *argv[], analdef *adef, tree *tr)
 {
   int	optind = 1;
   int        c;
@@ -3873,7 +3928,7 @@ static void get_args(int argc, char *argv[], analdef *adef, tree *tr)
 	  case 't':
 	    adef->mode = BIG_RAPID_MODE;
 	    tr->doCutoff = TRUE;
-	    adef->permuteTreeoptimize = TRUE;	    
+	    adef->permuteTreeoptimize = TRUE;
 	    break;
 	  case 'u':
 	    /* TODO readme */
@@ -3950,7 +4005,7 @@ static void get_args(int argc, char *argv[], analdef *adef, tree *tr)
       default:	   
 	errorExit(-1);              
     }    
-  }     
+  }    
 
 #ifdef _USE_PTHREADS  
   if(NumberOfThreads < 2)
@@ -4390,7 +4445,7 @@ void errorExit(int e)
 
 
 
-static void makeFileNames(void)
+void makeFileNames(void)
 {
   int infoFileExists = 0;
 #ifdef PARALLEL
@@ -4475,7 +4530,7 @@ static void makeFileNames(void)
 }
 
 
-static void readData(analdef *adef, rawdata *rdta, cruncheddata *cdta, tree *tr)
+void readData(analdef *adef, rawdata *rdta, cruncheddata *cdta, tree *tr)
 {
   INFILE = fopen(seq_file, "r");
   

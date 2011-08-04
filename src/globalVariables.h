@@ -28,71 +28,71 @@
  *  Bioinformatics 2006; doi: 10.1093/bioinformatics/btl446
  */
 
+#ifndef GLOBALVARIABLES_H
+#define GLOBALVARIABLES_H
 
 #ifdef PARALLEL
-int numOfWorkers;
+extern int numOfWorkers;
 #endif
 
-int processID;
-infoList iList;
-FILE   *INFILE;
+extern int processID;
+extern infoList iList;
+extern FILE   *INFILE;
 
-int Thorough = 0;
+extern int Thorough;
 
-char run_id[128] = "", 
-  workdir[1024] = "", 
-  seq_file[1024] = "", 
-  tree_file[1024]="", 
-  weightFileName[1024] = "", 
-  modelFileName[1024] = "", 
-  excludeFileName[1024] = "",
-  bootStrapFile[1024] = "", 
-  permFileName[1024] = "", 
-  resultFileName[1024] = "", 
-  logFileName[1024] = "", 
-  checkpointFileName[1024] = "", 
-  infoFileName[1024] = "", 
-  randomFileName[1024] = "",   
-  bootstrapFileName[1024] = "", 
-  bipartitionsFileName[1024] = "",
-  ratesFileName[1024] = "", 
-  perSiteLLsFileName[1024] = "", 
-  lengthFileName[1024] = "", 
-  lengthFileNameModel[1024] = "",
-  proteinModelFileName[1024] = "";
+extern char run_id[128], 
+  workdir[1024], 
+  seq_file[1024], 
+  tree_file[1024], 
+  weightFileName[1024], 
+  modelFileName[1024], 
+  excludeFileName[1024],
+  bootStrapFile[1024], 
+  permFileName[1024], 
+  resultFileName[1024], 
+  logFileName[1024], 
+  checkpointFileName[1024], 
+  infoFileName[1024], 
+  randomFileName[1024],   
+  bootstrapFileName[1024], 
+  bipartitionsFileName[1024],
+  ratesFileName[1024], 
+  perSiteLLsFileName[1024], 
+  lengthFileName[1024], 
+  lengthFileNameModel[1024],
+  proteinModelFileName[1024];
 
-char *likelihood_key   = "likelihood",
-  *ntaxa_key        = "ntaxa",
-  *smoothed_key     = "smoothed";
+extern char *likelihood_key,
+  *ntaxa_key,
+  *smoothed_key;
 
-char inverseMeaningDNA[16] = {'_', 'A', 'C', 'M', 'G', 'R', 'S', 'V', 'T', 'W', 'Y', 'H', 'K', 'D', 'B', '-'};
-char inverseMeaningPROT[23] = {'A','R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 
-			       'T', 'W', 'Y', 'V', 'B', 'Z', '-'};
-double masterTime;
+extern char inverseMeaningDNA[16];
+extern char inverseMeaningPROT[23]; 
+extern double masterTime;
 
-const int protTipParsimonyValue[23] = {1 /* A*/, 2 /*R*/, 4/*N*/, 8/*D*/, 16/*C*/, 32/*Q*/, 64/*E*/, 128/*G*/, 
-				       256/*H*/, 512 /*I*/, 1024/*L*/, 2048/*K*/, 4096/*M*/, 
-				       8192 /*F*/, 16384/*P*/, 32768 /*S*/, 65535 /* T*/, 131072 /*W*/, 262144/*Y*/, 
-				       524288 /*V*/, 12 /* N & D */, 96 /*Q & E*/, 1048575};
+extern const int protTipParsimonyValue[23]; 
 
-int partCount = 0;
+extern int partCount;
 
-int optimizeRatesInvocations = 1;  
-int optimizeRateCategoryInvocations = 1;
-int optimizeAlphaInvocations = 1;
-int optimizeInvarInvocations = 1;
+extern int optimizeRatesInvocations;  
+extern int optimizeRateCategoryInvocations;
+extern int optimizeAlphaInvocations;
+extern int optimizeInvarInvocations;
 
 #ifdef _USE_OMP
-volatile int             NumberOfThreads;
+extern volatile int             NumberOfThreads;
 #endif
 
 
 #ifdef _USE_PTHREADS
-volatile int             jobCycle;
-volatile int             threadJob;
-volatile int             NumberOfThreads;
-volatile double          *reductionBuffer;
-volatile double          *reductionBufferTwo;
-volatile int             *reductionBufferParsimony;
-volatile int             *barrierBuffer;
+extern volatile int             jobCycle;
+extern volatile int             threadJob;
+extern volatile int             NumberOfThreads;
+extern volatile double          *reductionBuffer;
+extern volatile double          *reductionBufferTwo;
+extern volatile int             *reductionBufferParsimony;
+extern volatile int             *barrierBuffer;
 #endif
+
+#endif // GLOBALVARIABLES_H

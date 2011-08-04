@@ -1113,7 +1113,7 @@ boolean treeReadLen (FILE *fp, tree *tr, analdef *adef)
   tr->nextnode    = tr->mxtips + 1;      
   tr->smoothed    = FALSE;
   tr->rooted      = FALSE;
-   
+  
   is_fact = processTreeCom(fp, tr);
 
   p = tr->nodep[(tr->nextnode)++]; 
@@ -1151,7 +1151,7 @@ boolean treeReadLen (FILE *fp, tree *tr, analdef *adef)
     {
       if (! treeNeedCh(fp, ';', "at end of"))       return FALSE;
     }
-  
+ 
   if (tr->rooted) 
     {
       p->next->next->back = (nodeptr) NULL;      
