@@ -5,11 +5,16 @@ import os,sys
 import optparse
 
 # raxml library
-import raxml
+try:
+    import raxml
+except:
+    from os.path import realpath, dirname, join
+    sys.path.append(join(realpath(dirname(dirname(__file__))), "python"))
+    import raxml
 
-# rasmus libraries
+# rasmus and compbio libraries
 from rasmus import treelib, util
-from rasmus.bio import phylo
+from compbio import phylo
 
 #=============================
 # parser
@@ -30,7 +35,7 @@ parser.add_option("--niter", dest="niter",
                   help="number of iterations (default: 5)")
 parser.add_option("-e", "--extra", dest="extra",
                   metavar="<extra arguments to initialize RAxML>",
-                  default="-m PROTGAMMAJTT -n test -e 2.0",
+                  default="-m GTRGAMMA -n test -e 2.0",
                   help="extra arguments to pass to program")
 parser.add_option("-p", "--pval", dest="pval",
                   metavar="<p-value>",
@@ -64,7 +69,10 @@ raxml.optimize_model(treefile, seqfile, options.extra)
 util.toc()
 
 tree = treelib.read_tree(treefile)
-for node in tree: node.dist = 0
+for node in tree:
+    node.dist = 0
+    if "boot" in node.data:
+        del node.data["boot"]
 treehash = phylo.hash_tree(treelib.unroot(tree, newCopy=True))
 treehashes = set([treehash])
 

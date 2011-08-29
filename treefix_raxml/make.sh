@@ -20,7 +20,6 @@ swig -python raxml.i
 cd ../../
 
 python setup.py build_ext --inplace
-mv _raxml.so python/
 
 export PYTHONPATH=$PYTHONPATH:~/projects/raxml/python
 
@@ -46,11 +45,17 @@ rm -r build
 #=============================================================================
 # test
 
-./examples/test_swig.py
-./examples/test_mod.py
+./examples/test_swig.py \
+    -T .nt.raxml.tree \
+    -A .nt.align.phylip \
+    examples/sim-fungi/0/0.nt.raxml.tree
+./examples/test_mod.py \
+    -T .nt.raxml.tree \
+    -A .nt.align.phylip \
+    examples/sim-fungi/0/0.nt.raxml.tree
 
 raxmlHPC -f h \
-    -t ~/work/modencode-orth/0/0.pep.raxml.tree \
+    -t examples/sim-fungi/0/0.nt.raxml.tree \
     -z ~/projects/raxml/tops.tree \
-    -s ~/work/modencode-orth/0/0.pep.align.phylip \
-    -m PROTGAMMAJTT -e 2.0 -n sh -#1
+    -s examples/sim-fungi/0/0.nt.align.phylip \
+    -m GTRGAMMA -e 2.0 -n sh -#1

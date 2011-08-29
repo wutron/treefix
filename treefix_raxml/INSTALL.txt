@@ -1,5 +1,5 @@
 PyRAxML (Python Wrapper for RAxML)
-http://compbio.mit.edu/treefix/raxml/
+http://compbio.mit.edu/treefix/index.html#raxml
 Yi-Chieh Wu
 
 =============================================================================

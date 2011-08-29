@@ -12,22 +12,14 @@ import os,sys
 
 VERSION = '0.1'
 
-#old_filename = os.path.join("python", "raxml.py")
-#new_filename = os.path.join("python", "__init__.py")
-#if os.path.exists(old_filename):
-#    os.rename(old_filename, new_filename)
-
 extra_link_args = []
 if sys.platform != 'darwin':
     extra_link_args.append('-s')
 
-#srcs = []
 srcs = [os.path.join('src',fn) for fn in os.listdir('src') 
         if (not os.path.isdir(fn)) and fn.endswith('.c')]
 raxml_module = Extension('_raxml',
                          sources=['python/raxml/raxml_wrap.c'] + srcs,
-#                         libraries=['example'],
-#                         library_dirs=['lib'],
                          extra_link_args=extra_link_args
                          )
  
@@ -37,7 +29,7 @@ setup(
     description='Python wrapper for RAxML',
     author='Yi-Chieh Wu',
     author_email='yjw@mit.edu',
-#    url='http://compbio.mit.edu/raxml_python/',
+#    url='http://compbio.mit.edu/treefix/index.html#raxml',
 
     classifiers=[
           'Development Status :: 5 - Production/Stable',
@@ -52,8 +44,10 @@ setup(
           'Topic :: Education',
           ],
 
-    package_dir = {'raxml':'python'},
-    packages = ['raxml'],
+    package_dir = {'': 'python'},
+    packages = ['raxml',
+                'raxml.deps.rasmus', 'raxml.deps.rasmus.ply',
+                'raxml.deps.compbio'],
 #    py_modules=['raxml'],
     ext_modules=[raxml_module]
     )
