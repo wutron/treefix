@@ -19,13 +19,13 @@ except:
     import random as nprnd
     NUMPY = False
 
-# rasmus libraries
-from rasmus import treelib, util, timer
-from rasmus.bio import phylo
-
-# treefix libraries
+# treefix library
 import treefix
 from treefix import common
+
+# rasmus and compbio libraries
+from rasmus import treelib, util, timer
+from compbio import phylo
 
 """
 All trees should be in newick format.
@@ -62,18 +62,29 @@ grp_io.add_option("-o", "--oldext", dest="oldext",
                   help="old tree file extension (default: \".tree\")")
 grp_io.add_option("-n", "--newext", dest="newext",
                   metavar="<new tree file extension>",
-                  default=".fixed.tree",
-                  help="new tree file extension (default: \".fixed.tree\")")
+                  default=".treefix.tree",
+                  help="new tree file extension (default: \".treefix.tree\")")
 parser.add_option_group(grp_io)
 
-grp_model = optparse.OptionGroup(parser, "Model")
+grp_cost = optparse.OptionGroup(parser, "Cost Function")
+grp_cost.add_option("-D", "--dupcost", dest="dupcost",
+                    metavar="<dup cost>",
+		    default=1.0, type="float",
+		    help="duplication cost (default: 1.0)")
+grp_cost.add_option("-L", "--losscost", dest="losscost",
+                    metavar="<loss cost>",
+		    default=1.0, type="float",
+		    help="loss cost (default: 1.0)")
+parser.add_option_group(grp_cost)
+
+grp_model = optparse.OptionGroup(parser, "Likelihood Model")
 grp_model.add_option("-m", "--module", dest="module",
                      metavar="<module for tree calculations>",
                      default="raxml",
                      help="module for tree calculations (default: \"raxml\")")
 grp_model.add_option("-e", "--extra", dest="extra",
                      metavar="<extra arguments to module>",
-                     default="-m PROTGAMMAJTT -n test -e 2.0",
+                     default="-m GTRGAMMA -n test -e 2.0",
                      help="extra arguments to pass to program")
 parser.add_option_group(grp_model)
 
@@ -95,16 +106,16 @@ grp_search.add_option("--seed", dest="seed",
 		      help="seed value for random generator")
 grp_search.add_option("--niter", dest="niter",
                       metavar="<# iterations>",
-                      default=1000, type="int",
-                      help="number of iterations (default: 1000)")
+                      default=100, type="int",
+                      help="number of iterations (default: 100)")
 grp_search.add_option("--nquickiter", dest="nquickiter",
                       metavar="<# quick iterations>",
-                      default=100, type="int",
-                      help="number of subproposals (default: 100)")
+                      default=50, type="int",
+                      help="number of subproposals (default: 50)")
 grp_search.add_option("--freconroot", dest="freconroot",
                       metavar="<fraction reconroot>",
-                      default=1.0, type="float",
-                      help="fraction of search proposals to reconroot")
+                      default=0.05, type="float",
+                      help="fraction of search proposals to reconroot (default: 0.05)")
 parser.add_option_group(grp_search)
 
 grp_info = optparse.OptionGroup(parser, "Information")
@@ -158,6 +169,14 @@ treefiles = common.get_input_files(parser, options, args)
 if len(treefiles) == 0:
     parser.error("must specify input file(s)")
 
+# read species tree and species map
+stree = treelib.read_tree(options.stree)
+gene2species = phylo.read_gene2species(options.smap)
+
+# read duplication and loss cost
+dupcost = options.dupcost
+losscost = options.losscost
+
 #=============================
 # utilities
 
@@ -200,7 +219,8 @@ def unroot(gtree, newCopy=True):
     return gtree
 
 recon_cache = {}
-def recon_root(gtree, stree, gene2species, newCopy=True, returnCost=False):
+def recon_root(gtree, stree, gene2species, newCopy=True, returnCost=False,
+               dupcost=dupcost, losscost=losscost):
     """cached version of phylo.recon_root"""
     
     # can hash with unrooted version since recon_root first unroots anyways
@@ -208,7 +228,8 @@ def recon_root(gtree, stree, gene2species, newCopy=True, returnCost=False):
     if treehash in recon_cache:
         tree, cost = recon_cache[treehash]
     else:
-        tree, cost = phylo.recon_root(gtree, stree, gene2species, newCopy=True, returnCost=True, keepName=True)
+        tree, cost = phylo.recon_root(gtree, stree, gene2species, newCopy=True, keepName=True, returnCost=True,
+                                      dupcost=dupcost, losscost=losscost)
         recon_cache[treehash] = tree, cost
 
     if newCopy:
@@ -222,7 +243,8 @@ def recon_root(gtree, stree, gene2species, newCopy=True, returnCost=False):
         return gtree
 
 duploss_cache = {}
-def count_dup_loss(gtree, stree, gene2species):
+def count_dup_loss_cost(gtree, stree, gene2species,
+                        dupcost=dupcost, losscost=losscost):
     """cached version of phylo.count_dup_loss"""
     
     treehash = phylo.hash_tree(gtree)
@@ -231,7 +253,11 @@ def count_dup_loss(gtree, stree, gene2species):
     
     recon = phylo.reconcile(gtree, stree, gene2species)
     events = phylo.label_events(gtree, recon)
-    cost = phylo.count_dup_loss(gtree, stree, recon, events)
+    cost = 0
+    if dupcost != 0:
+        cost += phylo.count_dup(gtree, events) * dupcost
+    if losscost != 0:
+        cost += phylo.count_loss(gtree, stree, recon) * losscost
     duploss_cache[treehash] = cost
     return cost
 
@@ -257,10 +283,6 @@ def compute_lik_test(gtree):
 
 #=============================
 # main
-
-# read species tree and species map
-stree = treelib.read_tree(options.stree)
-gene2species = phylo.read_gene2species(options.smap)
 
 # log file
 if options.verbose >= 1:
@@ -306,7 +328,7 @@ for treefile in treefiles:
             usertreehash = phylo.hash_tree(usertree)
         else:
             usertreehash = phylo.hash_tree(unroot(usertree, newCopy=False))
-	usercost = count_dup_loss(usertree, stree, gene2species)
+	usercost = count_dup_loss_cost(usertree, stree, gene2species, dupcost, losscost)
     else:
         usertreehash = None
 
@@ -340,7 +362,7 @@ for treefile in treefiles:
 	    del gtree.default_data["boot"]
 
 	# log initial tree
-	cost0 = count_dup_loss(gtree, stree, gene2species)
+	cost0 = count_dup_loss_cost(gtree, stree, gene2species, dupcost, losscost)
 	if options.verbose >= 1:
 	    log.log("search: initial")
             log_tree(gtree, log)
@@ -439,7 +461,8 @@ for treefile in treefiles:
 		# reconroot (some percentage of the time depending on options.reconroot)
 		if randvec[j+options.nquickiter] < options.freconroot:
                     timer_recon.start()
-                    gtree, cost = recon_root(gtree, stree, gene2species, newCopy=False, returnCost=True)
+                    gtree, cost = recon_root(gtree, stree, gene2species, newCopy=False, returnCost=True,
+                                             dupcost=dupcost, losscost=losscost)
                     runtime_recon += timer_recon.stop()
 
                     # did reconroot change the tree?
@@ -452,7 +475,7 @@ for treefile in treefiles:
                         if options.verbose > 3:
                             log.log("prescreen: recon\t= changed")
 	        else:
-		    cost = count_dup_loss(gtree, stree, gene2species)
+		    cost = count_dup_loss_cost(gtree, stree, gene2species, dupcost, losscost)
 
                 # log
 		if options.verbose >= 3:
@@ -559,7 +582,8 @@ for treefile in treefiles:
         else:
 	    # do a final reconroot
             timer_recon.start()
-            mintree, mincost = recon_root(mintree, stree, gene2species, newCopy=False, returnCost=True)
+            mintree, mincost = recon_root(mintree, stree, gene2species, newCopy=False, returnCost=True,
+                                          dupcost=dupcost, losscost=losscost)
             runtime_recon += timer_recon.stop()
 
             treehash = phylo.hash_tree(unroot(mintree, newCopy=True))

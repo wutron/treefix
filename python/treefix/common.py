@@ -12,11 +12,13 @@ def add_common_options(parser,
     if infiles:
         parser.add_option("-i", "--input", dest="input",
                           action="append",
-                          metavar="<input file>")
+                          metavar="<input file>",
+			  help="list of input files, one per line")
     if reroot:
         parser.add_option("-r", "--reroot", dest="reroot",
                           action="store_true", default=False,
-                          metavar="<reroot tree>")
+                          metavar="<reroot tree>",
+			  help="whether to reroot the input tree")
     if stree:
        parser.add_option("-s", "--stree", dest="stree",
                          metavar="<species tree>",

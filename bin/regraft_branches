@@ -11,30 +11,12 @@ import collections
 import StringIO
 
 from rasmus import treelib, util, timer
-from rasmus.bio import phylo
+from compbio import phylo
 
 import treefix
 from treefix import common
 
 DEBUG = False
-
-"""
-All trees should be in newick format.
-
-module should have at least one variable and four commands:
-    -- rooted
-       True if module uses rooted trees.
-    -- init()
-       Initializes the module.
-    -- cleanup()
-       Performs any cleanup of the module.
-    -- optimize_model(treefile, seqfile, extra)
-       Optimizes the underlying model in the module given the tree, seq (alignment),
-       and extra parameter arguments.
-    -- compute_lik_test(tree, test statistic)
-       Computes the test statistic for tree likelihood equivalence.
-       Returns the p-value and Dlnl (delta lik = best lik - current lik).
-"""
 
 usage = "usage: %prog [options] <gene tree> ..."
 parser = optparse.OptionParser(usage=usage)
@@ -61,7 +43,7 @@ grp_model.add_option("-m", "--module", dest="module",
                      help="module for tree calculations (default: \"raxml\")")
 grp_model.add_option("-e", "--extra", dest="extra",
                      metavar="<extra arguments to module>",
-                     default="-m PROTGAMMAJTT -n test -e 2.0",
+                     default="-m GTRGAMMA -n test -e 2.0",
                      help="extra arguments to pass to program")
 parser.add_option_group(grp_model)
 

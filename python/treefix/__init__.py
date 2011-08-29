@@ -4,7 +4,7 @@
 
 
 #
-# Note, this module requires the yjw, rasmus, compbio python modules.
+# Note, this module requires the rasmus, compbio python modules.
 #
 
 import sys, os
@@ -16,9 +16,9 @@ def load_deps(dirname="deps"):
 # add pre-bundled dependencies to the python path,
 # if they are not available already
 try:
-    import yjw, rasmus, compbio
+    import rasmus, compbio
 except ImportError:
     load_deps()
-    import yjw, rasmus, compbio
+    import rasmus, compbio
 
 
