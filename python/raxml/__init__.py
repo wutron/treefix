@@ -2,13 +2,27 @@
 # Python module for RAXML library
 #
 
-import os
+import sys,os
 
 # import RAXML SWIG module
 import raxml
 
 # scipy libraries
 from scipy.stats import norm
+
+# load rasmus libraries if available
+def load_deps(dirname="deps"):
+    sys.path.append(os.path.realpath(
+                os.path.join(os.path.dirname(__file__), dirname)))
+
+# add pre-bundled dependencies to the python path,
+# if they are not available already
+try:
+    import rasmus, compbio
+except ImportError:
+    load_deps()
+    import rasmus, compbio
+
 
 #=============================================================================
 # globals
@@ -57,7 +71,7 @@ def globalRAXML():
 #=============================================================================
 # model optimization
 
-def optimize_model(treefile, seqfile, extra="-m PROTGAMMAJTT -n test"):
+def optimize_model(treefile, seqfile, extra="-m GTRGAMMA -n test"):
     """Optimizes the RAXML model"""
     myraxml = globalRAXML()
     
@@ -98,7 +112,9 @@ def compute_lik_test(tree, test="SH"):
         if Dlnl <= 0:
             return 1.0, Dlnl
         
-        # really should just use pval = norm.sf(zscore), but raxml uses two-sided test
+        # really should just use pval = norm.sf(zscore) if one of the trees is the ML tree, 
+	# but SH test compares two a priori trees (to determine if T_x and T_y
+	# are equally good explanations of the data), so raxml uses two-sided test
         return norm.sf(zscore)*2, Dlnl
 
     raise Exception("%s test statistic not implemented" % test)
@@ -121,11 +137,6 @@ def read_tree(tree):
 
 def draw_raxml_tree(*args, **kargs):
     """Draw raxml tr -- adef and tr must have been previously defined"""
-    try:
-    	from rasmus import treelib
-    except:
-	raise Exception("treelib not found -- cannot draw_raxml_tree")
-
     myraxml = globalRAXML()
     treestr = raxml.tree_to_string(myraxml.tr, myraxml.adef)
     tree = treelib.parse_newick(treestr)

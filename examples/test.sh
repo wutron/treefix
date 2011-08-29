@@ -10,10 +10,9 @@
 
 cd ../python/raxml
 swig -python raxml.i
-cd ../..
+cd ../../
 
 python setup.py build_ext --inplace
-mv _raxml.so python
 
 cd examples
 export PYTHONPATH=$PYTHONPATH:../python

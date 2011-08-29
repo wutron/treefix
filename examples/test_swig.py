@@ -13,9 +13,9 @@ import raxml
 # scipy library
 from scipy.stats import norm
 
-# rasmus libraries
+# rasmus and compbio libraries
 from rasmus import treelib, util
-from rasmus.bio import phylo
+from compbbio import phylo
 
 #=============================
 # parser
@@ -35,7 +35,7 @@ parser.add_option("--niter", dest="niter",
                   help="number of iterations (default: 5)")
 parser.add_option("-e", "--extra", dest="extra",
                   metavar="<extra arguments to initialize RAxML>",
-                  default="-m PROTGAMMAJTT -n test -e 2.0",
+                  default="-m GTRGAMMA -n test -e 2.0",
                   help="extra arguments to pass to program")
 parser.add_option("-p", "--pval", dest="pval",
                   metavar="<p-value>",
