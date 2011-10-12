@@ -2,7 +2,6 @@
 
 #
 # This code requires an underlying module for likelihood testing.
-# (Currently uses raxml.)
 #
 
 # python libraries
@@ -18,6 +17,25 @@ try:
 except:
     import random as nprnd
     NUMPY = False
+
+# string to binary representation
+try:
+    if bin(0): pass
+except NameError, ne:
+    def bin(x):
+        """
+        bin(number) -> string
+        Stringifies an int or long in base 2.
+        """
+        if x < 0: return '-' + bin(-x)
+        out = []
+        if x == 0: out.append('0')
+        while x > 0:
+            out.append('01'[x & 1])
+            x >>= 1
+        try: return '0b' + ''.join(reversed(out))
+        except NameError, ne2: out.reverse()
+        return '0b' + ''.join(out)
 
 # treefix library
 import treefix
@@ -42,7 +60,7 @@ module should have at least one variable and four commands:
        and extra parameter arguments.
     -- compute_lik_test(tree, test statistic)
        Computes the test statistic for tree likelihood equivalence.
-       Returns the p-value and Dlnl (delta lik = best lik - current lik).
+       Returns the p-value and Dlnl (delta lnl = best lnl - current lnl).
 """
 
 usage = "usage: %prog [options] <gene tree> ..."
@@ -50,7 +68,7 @@ parser = optparse.OptionParser(usage=usage)
 
 grp_io = optparse.OptionGroup(parser, "Input/Output")
 common.add_common_options(grp_io, 
-                          infiles=True,
+                          infiles=True, reroot=True,
 			  stree=True, smap=True,
 			  alignext=True)
 grp_io.add_option("-U", "--usertreeext", dest="usertreeext",
@@ -67,6 +85,7 @@ grp_io.add_option("-n", "--newext", dest="newext",
 parser.add_option_group(grp_io)
 
 grp_cost = optparse.OptionGroup(parser, "Cost Function")
+common.move_option(parser, "--reroot", grp_cost)
 grp_cost.add_option("-D", "--dupcost", dest="dupcost",
                     metavar="<dup cost>",
 		    default=1.0, type="float",
@@ -132,8 +151,12 @@ parser.add_option_group(grp_info)
 
 grp_debug = optparse.OptionGroup(parser, "Debug")
 grp_debug.add_option("--debug", dest="debug",
-                     default=False, action="store_true",
-                     help="debug mode")
+                     metavar="<debug mode>",
+                     default=0, type="int",
+                     help="debug mode (octal: 0=normal, " +\
+                          "1=skips likelihood test, " +\
+                          "2=skips cost requirement, " +\
+                          "4=computes likelihood for all trees in pool)")
 parser.add_option_group(grp_debug)
 
 options, args = parser.parse_args()
@@ -145,11 +168,15 @@ options, args = parser.parse_args()
 common.check_req_options(parser, options, clade=False)
 options.verbose = int(options.verbose)
 
-# debug mode
-if options.debug:
-    DEBUG = True
-else:
-    DEBUG = False
+# debug options
+if options.debug < 0 or options.debug > 7:
+    parser.error("--debug must be in {0,...,7}: %d" % options.debug)
+debug = bin(options.debug)[2:].zfill(3)
+DEBUG_SKIP_LIK = True if debug[-1] == "1" else False
+DEBUG_SKIP_COST = True if debug[-2] == "1" else False
+DEBUG_COMPUTE_ALL_LIK = True if debug[-3] == "1" else False
+if DEBUG_SKIP_LIK and DEBUG_COMPUTE_ALL_LIK:
+    parser.error("cannot set debug flag 4 and 1: %d" % options.debug)
 
 # other options
 if options.pval < 0 or options.pval > 1:
@@ -274,10 +301,7 @@ def compute_lik_test(gtree):
     if treehash in lik_cache:
 	return lik_cache[treehash]
 
-    if DEBUG:
-        pval, Dlnl = 0, 0
-    else:
-        pval, Dlnl = eval("%s.compute_lik_test(gtree, options.test)" % options.module)
+    pval, Dlnl = eval("%s.compute_lik_test(gtree, options.test)" % options.module)
     lik_cache[treehash] = pval, Dlnl
     return pval, Dlnl
 
@@ -295,8 +319,14 @@ if options.verbose >= 1:
     log.log("TreeFix executed with the following arguments:")
     log.log("%s %s\n" % (os.path.basename(sys.argv[0]), ' '.join(sys.argv[1:])))
 
+    if DEBUG_SKIP_LIK: log.log("debug: skip likelihood test")
+    if DEBUG_SKIP_COST: log.log("debug: skip cost requirement")
+    if DEBUG_COMPUTE_ALL_LIK: log.log("debug: compute likelihoods for all trees in pool")
+    if any(map(lambda x: x == "1", debug)):
+        log.log("\n")
+
 # import module
-if DEBUG:
+if DEBUG_SKIP_LIK:
     rooted = False
 else:
     exec "import %s" % options.module
@@ -327,7 +357,7 @@ for treefile in treefiles:
         if rooted:
             usertreehash = phylo.hash_tree(usertree)
         else:
-            usertreehash = phylo.hash_tree(unroot(usertree, newCopy=False))
+            usertreehash = phylo.hash_tree(unroot(usertree, newCopy=True))
 	usercost = count_dup_loss_cost(usertree, stree, gene2species, dupcost, losscost)
     else:
         usertreehash = None
@@ -361,8 +391,12 @@ for treefile in treefiles:
 	if "boot" in gtree.default_data:
 	    del gtree.default_data["boot"]
 
-	# log initial tree
-	cost0 = count_dup_loss_cost(gtree, stree, gene2species, dupcost, losscost)
+        # log initial tree
+        if options.reroot:
+            gtree, cost0 = recon_root(gtree, stree, gene2species, newCopy=False, returnCost=True,
+                                      dupcost=dupcost, losscost=losscost)
+        else:
+            cost0 = count_dup_loss_cost(gtree, stree, gene2species, dupcost, losscost)
 	if options.verbose >= 1:
 	    log.log("search: initial")
             log_tree(gtree, log)
@@ -383,19 +417,26 @@ for treefile in treefiles:
 	mintree, mincost, minpval, minDlnl = tree0, cost0, None, 0
 
         # initialize module
-        if not DEBUG:
+        if not DEBUG_SKIP_LIK:
             if options.verbose >= 1: log.log(''); log.start("Optimizing model")
             eval("%s.init()" % options.module)
             eval("%s.optimize_model(treefile, alnfile, options.extra)" % options.module)
             if options.verbose >= 1: log.stop(); log.log('')
 
+        # runtime statistics
+	runtime_prop = 0; timer_prop = timer.Timer()
+	runtime_recon = 0; timer_recon = timer.Timer()
+	runtime_stat = 0; timer_stat = timer.Timer()
+
         # user tree statistics
         if options.verbose >= 1:
 	    if usertreehash:
                 log.log("user: cost\t= %d" % usercost)
-                if not DEBUG:
-	            userpval, userDlnl = compute_lik_test(usertree)
-                    log.log("user: pval\t= %.6g" % userpval)
+                if not DEBUG_SKIP_LIK:
+                    timer_stat.start()
+                    userpval, userDlnl = compute_lik_test(usertree)
+                    runtime_stat += timer_stat.stop()
+		    log.log("user: pval\t= %.6g" % userpval)
 	            log.log("user: Dlnl\t= %.6g" % userDlnl)
 		log.log("\n")
         
@@ -406,9 +447,6 @@ for treefile in treefiles:
 	uniques = set([treehash0])
 
         # do search
-        runtime_prop = 0; timer_prop = timer.Timer()
-        runtime_recon = 0; timer_recon = timer.Timer()
-	runtime_stat = 0; timer_stat = timer.Timer()
 	nproposals = 0; nuniques = 0; npools = 0; nemptypools = 0
 	ndiffrecon = 0; nrecon = 0
         for i in xrange(options.niter):            # outer search
@@ -489,7 +527,7 @@ for treefile in treefiles:
                 else:
                     treehash = phylo.hash_tree(unroot(gtree, newCopy=True))
 		if treehash != treehash1 and treehash not in pool:
-		    pool[treehash] = (gtree, cost)
+		    pool[treehash] = (gtree, cost, j)
                 if (usertreehash) and (not searched_user) and (treehash == usertreehash):
 		    searched_user = True
                 
@@ -509,41 +547,66 @@ for treefile in treefiles:
             # remove trees with higher costs
 	    if options.verbose >= 2:
 	        log.log("pool: size\t= %d" % len(pool))
-	    pool = filter(lambda (gtree, cost): cost <= mincost and cost < cost0, pool.values())
-            pool.sort(key=lambda x: x[1])
-	    if options.verbose >= 2:
-	        log.log("pool: filtered size\t= %d" % len(pool))
-		log.log("pool: mincost\t= %d" % mincost)
-		log.log("")
+            pool = pool.values()
+            if DEBUG_SKIP_COST:
+                fpool = pool
+            else:
+                fpool = filter(lambda (gtree, cost, ndx): cost <= mincost and cost < cost0, pool)
+                nfpool = len(fpool)
+                if options.verbose >= 2:
+                    log.log("pool: filtered size\t= %d" % nfpool)
+            if options.verbose >= 2:
+                log.log("")
+            fpool.sort(key=lambda x: x[1])
 
             # propose a tree from the pool with minimum cost that passes threshold
-            reject = True
-            for j, (gtree, cost) in enumerate(pool):
-                timer_stat.start()
-	        pval, Dlnl = compute_lik_test(gtree)
-                runtime_stat += timer_stat.stop()
-                
-                if (pval < options.pval) or \
-                   (cost == mincost and Dlnl > minDlnl):
-                    # (1) significantly worse topology or (2) worse Dlnl (smaller Dlnl is better)
+            if DEBUG_SKIP_LIK:
+                reject = False
+                mintree, mincost, minpval, minDlnl = fpool[0][0], fpool[0][1], 1, 0
+            else:
+                reject = True
+                for j, (gtree, cost, ndx) in enumerate(fpool):
+                    timer_stat.start()
+                    pval, Dlnl = compute_lik_test(gtree)
+                    runtime_stat += timer_stat.stop()
+
+                    if (pval < options.pval) or \
+                       (cost == mincost and Dlnl > minDlnl):
+                        # (1) significantly worse topology or (2) worse Dlnl (smaller Dlnl is better)
+                        if options.verbose >= 2:
+                            log.log("pool: iter %d (%d)" % (j, ndx))
+                            log.log("pool: reject")
+                            log.log("pool: cost\t= %d" % cost)
+                            log.log("pool: pval\t= %.6g" % pval)
+                            log.log("pool: Dlnl\t= %.6g" % Dlnl)
+                            log_tree(gtree, log)
+                            log.log("")
+                    else:
+                        reject = False
+                        mintree, mincost, minpval, minDlnl = gtree, cost, pval, Dlnl
+                        break
+
+            # debug
+	    if DEBUG_COMPUTE_ALL_LIK:
+                dpool = (fpool[j+1:] if j+1 < nfpool else []) + [x for x in pool if x not in fpool]
+                for (gtree, cost, ndx) in dpool:
+                    timer_stat.start()
+                    pval, Dlnl = compute_lik_test(gtree)
+                    runtime_stat += timer_stat.stop()
+
                     if options.verbose >= 2:
-                        log.log("pool: iter %d" % j)
-                        log.log("pool: reject")
+                        log.log("pool: iter (%d)" % ndx)
                         log.log("pool: cost\t= %d" % cost)
                         log.log("pool: pval\t= %.6g" % pval)
                         log.log("pool: Dlnl\t= %.6g" % Dlnl)
-			log_tree(gtree, log)
+                        log_tree(gtree, log)
                         log.log("")
-                else:
-                    reject = False
-                    mintree, mincost, minpval, minDlnl = gtree, cost, pval, Dlnl
-		    break
 
             # reset search and log
 	    search.reset()
 	    search.set_tree(mintree.copy())
 	    npools += 1
-	    if len(pool) == 0:
+	    if nfpool == 0:
                 nemptypools += 1
                 if options.verbose >= 1:
 		    log.log("search: iter %d" % i)
@@ -559,11 +622,11 @@ for treefile in treefiles:
             if options.verbose >= 1:
                 log.log("search: iter %d" % i)
                 log.log("search: accept")
-                log.log("search: cost\t= %d" % cost)
-                log.log("search: pval\t= %.6g" % pval)
-                log.log("search: Dlnl\t= %.6g" % Dlnl)
-                log_tree(gtree, log)
-	        log_tree(gtree, log, oneline=False)
+                log.log("search: cost\t= %d" % mincost)
+                log.log("search: pval\t= %.6g" % minpval)
+                log.log("search: Dlnl\t= %.6g" % minDlnl)
+                log_tree(mintree, log)
+	        log_tree(mintree, log, oneline=False)
                 log.log("\n")
 
 	    # end early if tree with zero cost found
@@ -573,7 +636,7 @@ for treefile in treefiles:
 	        break
 
 	# cleanup module for tree likelihood
-        if not DEBUG:
+        if not DEBUG_SKIP_LIK:
             eval("%s.cleanup()" % options.module)
 
         # has the tree changed?

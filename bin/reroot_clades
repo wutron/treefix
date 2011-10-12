@@ -53,27 +53,9 @@ if len(treefiles) == 0:
 #=============================
 # functions
 
-def label_tree_clades(gtree, recon, clades):
-    # find all subclades by finding all branches separating clade,
-    # e.g. node is in subtree of clade but parent node is not
-
-    if options.verbose >= 1: log.start("Labeling tree clades")
-    
-    nodes = {}
-    for cname, clade in clades.iteritems():
-        for node in gtree.preorder():
-            if (node.parent) and \
-               (recon[node] in clade) and (recon[node.parent] not in clade):
-	        nodes[node] = cname
-
-    if options.verbose >= 1: log.stop()
-        
-    return nodes
-
-
 def process_tree(gtree, stree, gene2species,
                  recon, events, clades):
-    nodes = label_tree_clades(gtree, recon, clades)
+    nodes = common.label_clades(gtree, recon, clades)
 
     if options.verbose >= 1: log.start("Processing clades")
     

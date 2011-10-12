@@ -9,8 +9,8 @@ TreeFix is a phylogenetic program that improves existing gene trees using
 the species tree.
 
 TreeFix citation: 
-Wu, Rasmussen, Bansal, Kellis. TreeFix: improving existing gene tree reconstructions 
-using the species tree. Genome Biology. In prep.
+Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed 
+gene tree error correction using species trees. Genome Biology. In prep.
 
 This package includes the Python source code of the TreeFix program
 as well as several library interfaces for python.
@@ -99,7 +99,7 @@ The module should have at least one variable and four commands:
        and extra parameter arguments.
     -- compute_lik_test(tree, test statistic)
        Computes the test statistic for tree likelihood equivalence.
-       Returns the p-value and Dlnl (delta lik = best lik - current lik).
+       Returns the p-value and Dlnl (delta lnl = best lnl - current lnl).
 
 #=============================================================================
 # Examples
