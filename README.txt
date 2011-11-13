@@ -12,6 +12,10 @@ TreeFix citation:
 Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed 
 gene tree error correction using species trees. In prep.
 
+Additionally, please cite the respective paper corresponding to the module
+you use for computing the test statistic for likelihood equivalence.
+(See the README.txt files within their respective packages.)
+
 This package includes the Python source code of the TreeFix program
 as well as several library interfaces for python.
 
