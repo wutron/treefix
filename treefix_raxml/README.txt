@@ -14,7 +14,7 @@ with Thousands of Taxa and Mixed Models. Bioinformatics 22(21):2688-2690, 2006
 
 PyRAxML citation: 
 Wu, Rasmussen, Bansal. TreeFix: improving existing gene tree reconstructions
-using the species tree.  Genome Biology. In prep 
+using the species tree.  In prep 
 
 The original RAxML source code (v7.0.4) is written by Alexandros Stamatakis
 and available at http://wwwkramer.in.tum.de/exelixis/software.html.
