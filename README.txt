@@ -10,7 +10,7 @@ the species tree.
 
 TreeFix citation: 
 Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed 
-gene tree error correction using species trees. Genome Biology. In prep.
+gene tree error correction using species trees. In prep.
 
 This package includes the Python source code of the TreeFix program
 as well as several library interfaces for python.
