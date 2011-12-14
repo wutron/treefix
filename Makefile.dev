@@ -61,5 +61,6 @@ versions:
 clean:
 	rm versions.txt
 	rm python/treefix/*.pyc
+	rm python/treefix/models/*.pyc
 	rm -r python/treefix/deps
 

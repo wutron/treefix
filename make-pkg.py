@@ -9,9 +9,11 @@ files = ["python",
 	 "INSTALL.txt",
 	 "LICENSE.txt"]
 
-exclude = ["examples/getexample\.sh", ".*\.pyc"]
+exclude = ["examples/getexample\.sh", "examples/testmodels\.sh",
+           ".*\.linux", ".*\.pyc",
+           "python/models/spimapmodel\.py", "python/models/coalmodel\.py", python/models/dtlmodel\.py"]
 
-include = ["bin/treefix"]
+include = ["bin/treefix", "bin/treefix_compute"]
 
 #=============================================================================
 

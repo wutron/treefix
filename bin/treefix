@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 #
-# This code requires an underlying module for likelihood testing.
+# This code requires underlying modules for
+# (1) testing likelihood equivalence (inherits treefix.models.StatModel), and
+# (2) computing the species tree aware cost (inherits treefix.models.CostModel).
 #
 
 # python libraries
@@ -37,7 +39,7 @@ except NameError, ne:
         except NameError, ne2: out.reverse()
         return '0b' + ''.join(out)
 
-# treefix library
+# treefix libraries
 import treefix
 from treefix import common
 
@@ -48,23 +50,15 @@ from compbio import phylo
 """
 All trees should be in newick format.
 
-module should have at least one variable and four commands:
-    -- rooted
-       True if module uses rooted trees.
-    -- init()
-       Initializes the module.
-    -- cleanup()
-       Performs any cleanup of the module.
-    -- optimize_model(treefile, seqfile, extra)
-       Optimizes the underlying model in the module given the tree, seq (alignment),
-       and extra parameter arguments.
-    -- compute_lik_test(tree, test statistic)
-       Computes the test statistic for tree likelihood equivalence.
-       Returns the p-value and Dlnl (delta lnl = best lnl - current lnl).
+likelihood module should inherit treefix.models.StatModel
+cost module should inherit treefix.models.CostModel
 """
 
+#=============================
+# parser
+
 usage = "usage: %prog [options] <gene tree> ..."
-parser = optparse.OptionParser(usage=usage)
+parser = optparse.OptionParser(usage=usage, version="%prog 1.1")
 
 grp_io = optparse.OptionGroup(parser, "Input/Output")
 common.add_common_options(grp_io, 
@@ -84,26 +78,15 @@ grp_io.add_option("-n", "--newext", dest="newext",
                   help="new tree file extension (default: \".treefix.tree\")")
 parser.add_option_group(grp_io)
 
-grp_cost = optparse.OptionGroup(parser, "Cost Function")
-common.move_option(parser, "--reroot", grp_cost)
-grp_cost.add_option("-D", "--dupcost", dest="dupcost",
-                    metavar="<dup cost>",
-		    default=1.0, type="float",
-		    help="duplication cost (default: 1.0)")
-grp_cost.add_option("-L", "--losscost", dest="losscost",
-                    metavar="<loss cost>",
-		    default=1.0, type="float",
-		    help="loss cost (default: 1.0)")
-parser.add_option_group(grp_cost)
-
+default_module = "treefix.models.raxmlmodel.RAxMLModel"
 grp_model = optparse.OptionGroup(parser, "Likelihood Model")
 grp_model.add_option("-m", "--module", dest="module",
-                     metavar="<module for tree calculations>",
-                     default="raxml",
-                     help="module for tree calculations (default: \"raxml\")")
+                     metavar="<module for likelihood calculations>",
+                     default=default_module,
+                     help="module for likelihood calculations " +\
+                          "(default: \"%s\")" % default_module)
 grp_model.add_option("-e", "--extra", dest="extra",
                      metavar="<extra arguments to module>",
-                     default="-m GTRGAMMA -n test -e 2.0",
                      help="extra arguments to pass to program")
 parser.add_option_group(grp_model)
 
@@ -113,11 +96,27 @@ grp_test.add_option("-t", "--test", dest="test",
                     choices=["AU", "NP", "BP", "KH", "SH", "WKH", "WSH"],
                     default="SH",
                     help="test statistic for likelihood equivalence (default: \"SH\")")
-grp_test.add_option("-p", "--pval", dest="pval",
-                    metavar="<p-value>",
+grp_test.add_option("--alpha", dest="alpha",
+                    metavar="<alpha>",
                     default=0.05, type="float",
-                    help="p-value threshold (default: 0.05)")
+                    help="alpha threshold (default: 0.05)")
+grp_test.add_option("-p", "--pval", dest="alpha",
+                    metavar="<alpha>",
+                    type="float",
+                    help="same as --alpha")
 parser.add_option_group(grp_test)
+
+default_smodule = "treefix.models.duplossmodel.DupLossModel"
+grp_smodel = optparse.OptionGroup(parser, "Species Tree Cost Model")
+grp_smodel.add_option("-M", "--smodule", dest="smodule",
+                      metavar="<module for species tree aware cost calculations>",
+                      default=default_smodule,
+                      help="module for species tree aware cost calculations " +\
+                           "(default: \"%s\")" % default_smodule)
+grp_smodel.add_option("-E", "--sextra", dest="sextra",
+                      metavar="<extra arguments to module>",
+                      help="extra arguments to pass to program")
+parser.add_option_group(grp_smodel)
 
 grp_search = optparse.OptionGroup(parser, "Search Options")
 grp_search.add_option("--seed", dest="seed",
@@ -150,12 +149,16 @@ common.move_option(parser, "--help", grp_info)
 parser.add_option_group(grp_info)
 
 grp_debug = optparse.OptionGroup(parser, "Debug")
+grp_debug.add_option("--cached", dest="cached",
+                     metavar="<cache mode>",
+                     default=False, action="store_true",
+                     help="set to cache likelihoods and costs")
 grp_debug.add_option("--debug", dest="debug",
                      metavar="<debug mode>",
                      default=0, type="int",
                      help="debug mode (octal: 0=normal, " +\
                           "1=skips likelihood test, " +\
-                          "2=skips cost requirement, " +\
+                          "2=skips cost filtering on pool, " +\
                           "4=computes likelihood for all trees in pool)")
 parser.add_option_group(grp_debug)
 
@@ -179,8 +182,8 @@ if DEBUG_SKIP_LIK and DEBUG_COMPUTE_ALL_LIK:
     parser.error("cannot set debug flag 4 and 1: %d" % options.debug)
 
 # other options
-if options.pval < 0 or options.pval > 1:
-    parser.error("--pval must be in [0,1]: %.5g" % options.pval)
+if options.alpha < 0 or options.alpha > 1:
+    parser.error("--alpha must be in [0,1]: %.5g" % options.alpha)
 
 if options.niter < 1:
     parser.error("--iter must be >= 1: %d" % options.iter)
@@ -199,10 +202,6 @@ if len(treefiles) == 0:
 # read species tree and species map
 stree = treelib.read_tree(options.stree)
 gene2species = phylo.read_gene2species(options.smap)
-
-# read duplication and loss cost
-dupcost = options.dupcost
-losscost = options.losscost
 
 #=============================
 # utilities
@@ -226,11 +225,12 @@ def log_tree(gtree, log, oneline=True, writeDists=False):
         log.log("tree:\n %s\n" % treeout.getvalue())
     treeout.close()
 
-def clear_caches():
-    """clears caches"""
-    recon_cache.clear()
-    duploss_cache.clear()
-    lik_cache.clear()
+if options.cached:
+    def clear_caches():
+        """clears caches"""
+        recon_cache.clear()
+        cost_cache.clear()
+        lik_cache.clear()
 
 #=============================
 # phylogeny functions
@@ -245,68 +245,81 @@ def unroot(gtree, newCopy=True):
                    onBranch=False, newCopy=False)
     return gtree
 
-recon_cache = {}
-def recon_root(gtree, stree, gene2species, newCopy=True, returnCost=False,
-               dupcost=dupcost, losscost=losscost):
-    """cached version of phylo.recon_root"""
-    
-    # can hash with unrooted version since recon_root first unroots anyways
-    treehash = phylo.hash_tree(unroot(gtree, newCopy=True))
-    if treehash in recon_cache:
-        tree, cost = recon_cache[treehash]
-    else:
-        tree, cost = phylo.recon_root(gtree, stree, gene2species, newCopy=True, keepName=True, returnCost=True,
-                                      dupcost=dupcost, losscost=losscost)
-        recon_cache[treehash] = tree, cost
+if options.cached:
+    recon_cache = {}
+    def recon_root(gtree, newCopy=True, returnCost=False, treehash=None):
+        """cached version of recon_root"""
+        
+        # can hash with unrooted version since recon_root first unroots anyways
+        if not treehash:
+            treehash = phylo.hash_tree(unroot(gtree, newCopy=True))
+            
+        if treehash in recon_cache:
+            tree, cost = recon_cache[treehash]
+        else:
+            tree, cost = smodule.recon_root(gtree, newCopy=True, returnCost=True)
+            recon_cache[treehash] = tree, cost
 
-    if newCopy:
-        gtree = tree.copy()
-    else:
-        treelib.set_tree_topology(gtree, tree)
+        if newCopy:
+            gtree = tree.copy()
+        else:
+            treelib.set_tree_topology(gtree, tree)
 
-    if returnCost:
-        return gtree, cost
-    else:
-        return gtree
+        if returnCost:
+            return gtree, cost
+        else:
+            return gtree
+else:
+    def recon_root(gtree, newCopy=True, returnCost=False, treehash=None):
+        return smodule.recon_root(gtree, newCopy=newCopy, returnCost=returnCost)
 
-duploss_cache = {}
-def count_dup_loss_cost(gtree, stree, gene2species,
-                        dupcost=dupcost, losscost=losscost):
-    """cached version of phylo.count_dup_loss"""
-    
-    treehash = phylo.hash_tree(gtree)
-    if treehash in duploss_cache:
-        return duploss_cache[treehash]
-    
-    recon = phylo.reconcile(gtree, stree, gene2species)
-    events = phylo.label_events(gtree, recon)
-    cost = 0
-    if dupcost != 0:
-        cost += phylo.count_dup(gtree, events) * dupcost
-    if losscost != 0:
-        cost += phylo.count_loss(gtree, stree, recon) * losscost
-    duploss_cache[treehash] = cost
-    return cost
+if options.cached:
+    cost_cache = {}
+    def compute_cost(gtree, treehash=None):
+        """cached version of species tree aware cost function"""
+
+        if not treehash:
+            treehash = phylo.hash_tree(gtree)
+            
+        if treehash in cost_cache:
+            return cost_cache[treehash]
+
+        cost = smodule.compute_cost(gtree)
+        cost_cache[treehash] = cost
+        return cost
+else:
+    def compute_cost(gtree, treehash=None):
+        return smodule.compute_cost(gtree)
 
 #=============================
 # likelihood functions
 
-lik_cache = {}
-def compute_lik_test(gtree):
-    """cached version of likelihood test"""
-    if not rooted:
-        gtree = unroot(gtree, newCopy=True)
+if options.cached:
+    lik_cache = {}
+    def compute_lik_test(gtree, treehash=None):
+        """cached version of likelihood test"""
 
-    treehash = phylo.hash_tree(gtree)
-    if treehash in lik_cache:
-	return lik_cache[treehash]
+        # can hash with unrooted version if likelihood test uses unrooted trees
+        if not treehash:
+            treehash = phylo.hash_tree(gtree if rooted else unroot(gtree, newCopy=True))
+            
+        if treehash in lik_cache:
+            return lik_cache[treehash]
 
-    pval, Dlnl = eval("%s.compute_lik_test(gtree, options.test)" % options.module)
-    lik_cache[treehash] = pval, Dlnl
-    return pval, Dlnl
+        pval, Dlnl = module.compute_lik_test(gtree, options.test)
+        lik_cache[treehash] = pval, Dlnl
+        return pval, Dlnl
+else:
+    def compute_lik_test(gtree, treehash=None):
+        return module.compute_lik_test(gtree, options.test)
 
 #=============================
 # main
+
+# timers
+timer_prop = timer.Timer()
+timer_recon = timer.Timer()
+timer_stat = timer.Timer()
 
 # log file
 if options.verbose >= 1:
@@ -317,7 +330,9 @@ if options.verbose >= 1:
         log = timer.Timer(outlog)
 
     log.log("TreeFix executed with the following arguments:")
-    log.log("%s %s\n" % (os.path.basename(sys.argv[0]), ' '.join(sys.argv[1:])))
+    log.log("%s %s\n" % (os.path.basename(sys.argv[0]), 
+                         ' '.join(map(lambda x: x if x.find(' ') == -1 else "\"%s\"" % x, 
+			              sys.argv[1:]))))
 
     if DEBUG_SKIP_LIK: log.log("debug: skip likelihood test")
     if DEBUG_SKIP_COST: log.log("debug: skip cost requirement")
@@ -325,12 +340,21 @@ if options.verbose >= 1:
     if any(map(lambda x: x == "1", debug)):
         log.log("\n")
 
-# import module
+# import likelihood module
 if DEBUG_SKIP_LIK:
     rooted = False
 else:
-    exec "import %s" % options.module
-    rooted = eval("%s.rooted" % options.module)
+    folder = '.'.join(options.module.split('.')[:-1])
+    if folder != '':
+        exec "import %s" % folder
+    module = eval("%s()" % options.module)
+    rooted = module.rooted
+
+# import cost module
+folder = '.'.join(options.smodule.split('.')[:-1])
+if folder != '':
+    exec "import %s" % folder
+smodule = eval("%s()" % options.smodule)
 
 # process genes trees
 for treefile in treefiles:
@@ -345,32 +369,31 @@ for treefile in treefiles:
     if options.verbose >= 1:
         log.start("Working on file '%s'" % treefile)
         log.log("random seed: %s\n" % seed)
-    
-    # read user tree
-    if options.usertreeext:
-        usertreefile = util.replace_ext(treefile, options.oldext, options.usertreeext)
-	usertree = treelib.read_tree(usertreefile)
-        if options.verbose >= 1:
-	    log.log("user: tree")
-	    log_tree(usertree, log, writeDists=True)
-	    log_tree(usertree, log, oneline=False, writeDists=True)
-        if rooted:
-            usertreehash = phylo.hash_tree(usertree)
-        else:
-            usertreehash = phylo.hash_tree(unroot(usertree, newCopy=True))
-	usercost = count_dup_loss_cost(usertree, stree, gene2species, dupcost, losscost)
-    else:
-        usertreehash = None
 
     # setup files
     alnfile = util.replace_ext(treefile, options.oldext, options.alignext)
     outfile = util.replace_ext(treefile, options.oldext, options.newext)
     out = util.open_stream(outfile, "w")
 
+    # read user tree
+    if options.usertreeext:
+        usertreefile = util.replace_ext(treefile, options.oldext, options.usertreeext)
+        usertree = treelib.read_tree(usertreefile)
+        if options.verbose >= 1:
+            log.log("user: tree")
+            log_tree(usertree, log, writeDists=True)
+            log_tree(usertree, log, oneline=False, writeDists=True)
+        usertreehash_rooted = phylo.hash_tree(usertree)
+        usertreehash_unrooted = phylo.hash_tree(unroot(usertree, newCopy=True))
+        usertreehash = usertreehash_rooted if rooted else usertreehash_unrooted
+    else:
+        usertreehash = None
+
     # read input trees 
     gtrees = treelib.read_trees(treefile)
     single_tree = len(gtrees) == 1
 
+    # iterate through trees    
     for treendx, gtree in enumerate(gtrees):
         if options.verbose >= 1: log.start("Working on file '%s', tree %d" % (treefile, treendx))
 
@@ -391,53 +414,58 @@ for treefile in treefiles:
 	if "boot" in gtree.default_data:
 	    del gtree.default_data["boot"]
 
+        # runtime statistics
+	runtime_prop = 0
+	runtime_recon = 0
+	runtime_stat = 0
+
+        # initialize likelihood module
+        if not DEBUG_SKIP_LIK:
+            if options.verbose >= 1: log.log(''); log.start("Optimizing likelihood model")
+            module.optimize_model(gtree, alnfile, options.extra)
+            if options.verbose >= 1: log.stop(); log.log('')
+
+        # initialize cost module
+        if options.verbose >= 1: log.log(''); log.start("Optimizing cost model")
+        smodule.optimize_model(gtree, stree, gene2species, options.sextra)
+        if options.verbose >= 1: log.stop(); log.log('')
+        
         # log initial tree
         if options.reroot:
-            gtree, cost0 = recon_root(gtree, stree, gene2species, newCopy=False, returnCost=True,
-                                      dupcost=dupcost, losscost=losscost)
+            timer_recon.start()
+            gtree, cost0 = recon_root(gtree, newCopy=False, returnCost=True)
+            runtime_recon += timer_recon.stop()
         else:
-            cost0 = count_dup_loss_cost(gtree, stree, gene2species, dupcost, losscost)
+            cost0 = compute_cost(gtree)
 	if options.verbose >= 1:
 	    log.log("search: initial")
             log_tree(gtree, log)
 	    log_tree(gtree, log, oneline=False)
-	    log.log("search: cost\t= %d" % cost0)
+	    log.log("search: cost\t= %.6g" % cost0)
 	
         # store hash of initial tree and whether search has visited user tree
         tree0 = gtree.copy()
-        if rooted:
-            treehash0 = phylo.hash_tree(tree0)
-        else:
-            treehash0 = phylo.hash_tree(unroot(tree0, newCopy=True))
+        treehash0_rooted = phylo.hash_tree(tree0)
+        treehash0_unrooted = phylo.hash_tree(unroot(tree0, newCopy=True))
+        treehash0 = treehash0_rooted if rooted else treehash0_unrooted
         if usertreehash:
             assert set(usertree.leaf_names()) == set(gtree.leaf_names())
-        searched_user = treehash0 == usertreehash
+            searched_user_rooted = treehash0_rooted == usertreehash_rooted
+            searched_user_unrooted = treehash0_unrooted == usertreehash_unrooted
 
         # initialize min values
 	mintree, mincost, minpval, minDlnl = tree0, cost0, None, 0
 
-        # initialize module
-        if not DEBUG_SKIP_LIK:
-            if options.verbose >= 1: log.log(''); log.start("Optimizing model")
-            eval("%s.init()" % options.module)
-            eval("%s.optimize_model(treefile, alnfile, options.extra)" % options.module)
-            if options.verbose >= 1: log.stop(); log.log('')
-
-        # runtime statistics
-	runtime_prop = 0; timer_prop = timer.Timer()
-	runtime_recon = 0; timer_recon = timer.Timer()
-	runtime_stat = 0; timer_stat = timer.Timer()
-
         # user tree statistics
-        if options.verbose >= 1:
-	    if usertreehash:
-                log.log("user: cost\t= %d" % usercost)
-                if not DEBUG_SKIP_LIK:
-                    timer_stat.start()
-                    userpval, userDlnl = compute_lik_test(usertree)
-                    runtime_stat += timer_stat.stop()
-		    log.log("user: pval\t= %.6g" % userpval)
-	            log.log("user: Dlnl\t= %.6g" % userDlnl)
+        if usertreehash:
+            usercost = compute_cost(usertree)
+            if options.verbose >= 1:
+                log.log("user: cost\t= %.6g" % usercost)
+                timer_stat.start()
+                userpval, userDlnl = compute_lik_test(usertree)
+                runtime_stat += timer_stat.stop()
+                log.log("user: pval\t= %.6g" % userpval)
+                log.log("user: Dlnl\t= %.6g" % userDlnl)
 		log.log("\n")
         
         # search functions
@@ -499,8 +527,7 @@ for treefile in treefiles:
 		# reconroot (some percentage of the time depending on options.reconroot)
 		if randvec[j+options.nquickiter] < options.freconroot:
                     timer_recon.start()
-                    gtree, cost = recon_root(gtree, stree, gene2species, newCopy=False, returnCost=True,
-                                             dupcost=dupcost, losscost=losscost)
+                    gtree, cost = recon_root(gtree, newCopy=False, returnCost=True)
                     runtime_recon += timer_recon.stop()
 
                     # did reconroot change the tree?
@@ -513,23 +540,24 @@ for treefile in treefiles:
                         if options.verbose > 3:
                             log.log("prescreen: recon\t= changed")
 	        else:
-		    cost = count_dup_loss_cost(gtree, stree, gene2species, dupcost, losscost)
+		    cost = compute_cost(gtree)
 
                 # log
 		if options.verbose >= 3:
-                    log.log("prescreen: cost\t= %d" % cost)
+                    log.log("prescreen: cost\t= %.6g" % cost)
 		    log_tree(gtree, log)
                     log.log("")
                 
 		# store to pool if unique
-		if rooted:
-                    treehash = phylo.hash_tree(gtree)
-                else:
-                    treehash = phylo.hash_tree(unroot(gtree, newCopy=True))
+		treehash_rooted = phylo.hash_tree(gtree)
+                treehash_unrooted = phylo.hash_tree(unroot(gtree, newCopy=True))
+                treehash = treehash_rooted if rooted else treehash_unrooted
 		if treehash != treehash1 and treehash not in pool:
 		    pool[treehash] = (gtree, cost, j)
-                if (usertreehash) and (not searched_user) and (treehash == usertreehash):
-		    searched_user = True
+                if (usertreehash) and (not searched_user_rooted) and (treehash_rooted == usertreehash_rooted):
+		    searched_user_rooted = True
+		if (usertreehash) and (not searched_user_unrooted) and (treehash_unrooted == usertreehash_unrooted):
+                    searched_user_unrooted = True
                 
 		# update mincost of pool and decide how to continue proposals from here
 		if cost < mincost_pool:
@@ -550,6 +578,7 @@ for treefile in treefiles:
             pool = pool.values()
             if DEBUG_SKIP_COST:
                 fpool = pool
+                nfpool = len(fpool)
             else:
                 fpool = filter(lambda (gtree, cost, ndx): cost <= mincost and cost < cost0, pool)
                 nfpool = len(fpool)
@@ -562,7 +591,8 @@ for treefile in treefiles:
             # propose a tree from the pool with minimum cost that passes threshold
             if DEBUG_SKIP_LIK:
                 reject = False
-                mintree, mincost, minpval, minDlnl = fpool[0][0], fpool[0][1], 1, 0
+                if nfpool > 0:
+                    mintree, mincost, minpval, minDlnl = fpool[0][0], fpool[0][1], 1, 0
             else:
                 reject = True
                 for j, (gtree, cost, ndx) in enumerate(fpool):
@@ -570,18 +600,20 @@ for treefile in treefiles:
                     pval, Dlnl = compute_lik_test(gtree)
                     runtime_stat += timer_stat.stop()
 
-                    if (pval < options.pval) or \
+                    if (pval < options.alpha) or \
                        (cost == mincost and Dlnl > minDlnl):
+                        # reject topology because
                         # (1) significantly worse topology or (2) worse Dlnl (smaller Dlnl is better)
                         if options.verbose >= 2:
                             log.log("pool: iter %d (%d)" % (j, ndx))
                             log.log("pool: reject")
-                            log.log("pool: cost\t= %d" % cost)
+                            log.log("pool: cost\t= %.6g" % cost)
                             log.log("pool: pval\t= %.6g" % pval)
                             log.log("pool: Dlnl\t= %.6g" % Dlnl)
                             log_tree(gtree, log)
                             log.log("")
                     else:
+                        # accept topology
                         reject = False
                         mintree, mincost, minpval, minDlnl = gtree, cost, pval, Dlnl
                         break
@@ -596,7 +628,7 @@ for treefile in treefiles:
 
                     if options.verbose >= 2:
                         log.log("pool: iter (%d)" % ndx)
-                        log.log("pool: cost\t= %d" % cost)
+                        log.log("pool: cost\t= %.6g" % cost)
                         log.log("pool: pval\t= %.6g" % pval)
                         log.log("pool: Dlnl\t= %.6g" % Dlnl)
                         log_tree(gtree, log)
@@ -622,22 +654,18 @@ for treefile in treefiles:
             if options.verbose >= 1:
                 log.log("search: iter %d" % i)
                 log.log("search: accept")
-                log.log("search: cost\t= %d" % mincost)
+                log.log("search: cost\t= %.6g" % mincost)
                 log.log("search: pval\t= %.6g" % minpval)
                 log.log("search: Dlnl\t= %.6g" % minDlnl)
                 log_tree(mintree, log)
 	        log_tree(mintree, log, oneline=False)
                 log.log("\n")
 
-	    # end early if tree with zero cost found
-	    if mincost == 0:
+	    # end early if tree with minimum cost found
+	    if (smodule.mincost != -util.INF) and (mincost == smodule.mincost):
 	        if options.verbose >= 1:
 	            log.log("search: break\n")
 	        break
-
-	# cleanup module for tree likelihood
-        if not DEBUG_SKIP_LIK:
-            eval("%s.cleanup()" % options.module)
 
         # has the tree changed?
         if rooted:
@@ -645,8 +673,7 @@ for treefile in treefiles:
         else:
 	    # do a final reconroot
             timer_recon.start()
-            mintree, mincost = recon_root(mintree, stree, gene2species, newCopy=False, returnCost=True,
-                                          dupcost=dupcost, losscost=losscost)
+            mintree, mincost = recon_root(mintree, newCopy=False, returnCost=True)
             runtime_recon += timer_recon.stop()
 
             treehash = phylo.hash_tree(unroot(mintree, newCopy=True))
@@ -656,14 +683,15 @@ for treefile in treefiles:
         if options.verbose >= 1:
             log.log("search: final")
 	    if usertreehash:
-	        log.log("search: visited user tree\t= %s" % ("yes" if searched_user else "no"))
+	        log.log("search: visited user tree\t= %s" % ("yes" if searched_user_rooted else "no"))
+	        log.log("search: visited (unrooted) user tree\t= %s" % ("yes" if searched_user_unrooted else "no"))
 	        log.log("search: equal user tree\t= %s" % ("yes" if treehash == usertreehash else "no"))
             if same:
                 log.log("search: changed\t= no")
             else:
                 log.log("search: changed\t= yes")
-		log.log("search: init cost\t= %d" % cost0)
-                log.log("search: final cost\t= %d" % mincost)
+		log.log("search: init cost\t= %.6g" % cost0)
+                log.log("search: final cost\t= %.6g" % mincost)
                 if minpval:
 		    log.log("search: pval\t= %.6g" % minpval)
                     log.log("search: Dlnl\t= %.6g" % minDlnl)
@@ -694,7 +722,7 @@ for treefile in treefiles:
         output_tree(mintree, out, single_tree)
 
         # cleanup
-        clear_caches()
+        if options.cached: clear_caches()
         if options.verbose >= 1: log.stop()
 
     # close output stream

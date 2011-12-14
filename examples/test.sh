@@ -12,7 +12,7 @@ export PATH=$PATH:../bin
 export PYTHONPATH=$PYTHONPATH:../python
 
 #=============================================================================
-# Compute the SH statistics for variations on an original gene trees.
+# Compute the corrected gene tree using RAxML SH statistics and dup/loss cost model
 
 # show help information
 treefix -h
@@ -44,6 +44,7 @@ treefix \
     -A .nt.align.phylip \
     -o .nt.raxml.tree \
     -n .nt.raxml.treefix.tree \
+    -U .tree \
     -V2 -l sim-fungi/0/0.nt.raxml.treefix.log \
     sim-fungi/0/0.nt.raxml.tree
 
@@ -52,3 +53,40 @@ treefix \
 
 rm sim-fungi/0/0.nt.raxml.treefix{.tree,.log}
 
+
+
+#=============================================================================
+# Helper executable to test various (likelihood and cost) modules
+
+# show help information
+treefix_compute -h
+
+#=============================
+# test RAxML module
+
+# show help
+treefix_compute --type likelihood -m treefix.models.raxmlmodel.RAxMLModel --show-help
+
+# compute pval and Dlnl for true tree using RAxML tree to optimize
+treefix_compute --type likelihood -m treefix.models.raxmlmodel.RAxMLModel \
+    -s config/fungi.stree -S config/fungi.smap \
+    -A .nt.align.phylip -U .nt.raxml.tree \
+    sim-fungi/0/0.tree
+
+# clean up
+rm sim-fungi/0/0.out
+
+#=============================
+# test dup/loss module
+
+# show help
+treefix_compute --type cost -m treefix.models.duplossmodel.DupLossModel --show-help
+
+# compute cost for RAxML tree
+treefix_compute --type cost -m treefix.models.duplossmodel.DupLossModel \
+    -r -s config/fungi.stree -S config/fungi.smap \
+    -o .nt.raxml.tree \
+    sim-fungi/0/0.nt.raxml.tree
+
+# clean up
+rm sim-fungi/0/0.out

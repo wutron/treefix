@@ -28,9 +28,12 @@ Running treefix with no arguments will print out its command-line usage:
 Usage: treefix [options] <gene tree> ...
 
 Options:
+  --version             show program's version number and exit
+
   Input/Output:
     -i <input file>, --input=<input file>
                         list of input files, one per line
+    -r, --reroot        set to reroot the input tree
     -s <species tree>, --stree=<species tree>
                         species tree file in newick format
     -S <species map>, --smap=<species map>
@@ -44,15 +47,10 @@ Options:
     -n <new tree file extension>, --newext=<new tree file extension>
                         new tree file extension (default: ".treefix.tree")
 
-  Cost Function:
-    -D <dup cost>, --dupcost=<dup cost>
-                        duplication cost (default: 1.0)
-    -L <loss cost>, --losscost=<loss cost>
-                        loss cost (default: 1.0)
-
   Likelihood Model:
-    -m <module for tree calculations>, --module=<module for tree calculations>
-                        module for tree calculations (default: "raxml")
+    -m <module for likelihood calculations>, --module=<module for likelihood calculations>
+                        module for likelihood calculations (default:
+                        "treefix.models.raxmlmodel.RAxMLModel")
     -e <extra arguments to module>, --extra=<extra arguments to module>
                         extra arguments to pass to program
 
@@ -60,8 +58,16 @@ Options:
     -t <test statistic>, --test=<test statistic>
                         test statistic for likelihood equivalence (default:
                         "SH")
-    -p <p-value>, --pval=<p-value>
-                        p-value threshold (default: 0.05)
+    --alpha=<alpha>     alpha threshold (default: 0.05)
+    -p <alpha>, --pval=<alpha>
+                        same as --alpha
+
+  Species Tree Cost Model:
+    -M <module for species tree aware cost calculations>, --smodule=<module for species tree aware cost calculations>
+                        module for species tree aware cost calculations
+                        (default: "treefix.models.duplossmodel.DupLossModel")
+    -E <extra arguments to module>, --sextra=<extra arguments to module>
+                        extra arguments to pass to program
 
   Search Options:
     --seed=<seed>       seed value for random generator
@@ -81,29 +87,33 @@ Options:
     -h, --help          show this help message and exit
 
   Debug:
-    --debug             debug mode
+    --cached            set to cache likelihoods and costs
+    --debug=<debug mode>
+                        debug mode (octal: 0=normal, 1=skips likelihood test,
+                        2=skips cost filtering on pool, 4=computes likelihood
+                        for all trees in pool)
 
 #=============================================================================
-# Likelihood Test
+# Likelihood Test and Species Tree Aware Cost Functions
 
-TreeFix requires a python module for computing the test statistic for
-likelihood equivalence.  Any program (e.g. CONSEL) may be used for the actual
-computation.  We have provided a module that uses RAxML at
-http://compbio.mit.edu/treefix/index.html#raxml.
+TreeFix requires python modules for
 
-The module should have at least one variable and four commands:
-    -- rooted
-       True if module uses rooted trees.
-    -- init()
-       Initializes the module.
-    -- cleanup()
-       Performs any cleanup of the module.
-    -- optimize_model(treefile, seqfile, extra)
-       Optimizes the underlying model in the module given the tree, seq (alignment),
-       and extra parameter arguments.
-    -- compute_lik_test(tree, test statistic)
-       Computes the test statistic for tree likelihood equivalence.
-       Returns the p-value and Dlnl (delta lnl = best lnl - current lnl).
+(1) testing likelihood equivalence
+    This should inherit treefix.models.StatModel.
+    See treefix.models.raxmlmodel.RAxMLModel for an example using the
+    SH test statistic with RAxML sitewise likelihoods.
+
+    Any program (e.g. CONSEL) may be used for the actual computation.
+    We have provided a module that uses RAxML
+    (requires a python wrapper around RAxML, available at
+    http://compbio.mit.edu/treefix/index.html#raxml).
+
+(2) computing the species tree aware cost
+    This should inherit treefix.models.CostModel.
+    See treefix.models.duplossmodel.DupLossModel for an example using
+    the duplication/loss cost.
+
+We have also provided a helper function (treefix_compute) for testing these modules.
 
 #=============================================================================
 # Examples

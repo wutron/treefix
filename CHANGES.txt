@@ -1,0 +1,13 @@
+TreeFix Change Log
+-------------------
+
+treefix-1.1
+----------
+- refactored code for computing likelihoods and costs into reuseable modules
+- updated to use RAxML wrapper version 0.2
+
+
+treefix-1.0 (2011/11/12)
+-----------------------
+- initial release with TreeFix paper
+
