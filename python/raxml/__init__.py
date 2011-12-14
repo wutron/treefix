@@ -25,13 +25,16 @@ except ImportError:
 
 
 #=============================================================================
-# globals
 
-_GLOBAL = None
-rooted = False	# RAxML uses unrooted trees
-
-class Globals:
+class RAxML:
+    """Wrapper for RAxML functions"""
+    
+    #=========================================
+    # constructors/destructors
+    
     def __init__(self):
+        self.rooted = False	# RAxML uses unrooted trees
+
         self.adef = raxml.new_analdef()
         self.tr = raxml.new_tree()
         self.optimal = False
@@ -43,101 +46,70 @@ class Globals:
         if self.best_vector is not None:
             raxml.delete_best_vector(self.best_vector)
 
-#=============================================================================
-# init/cleanup
-
-def init():
-    """Initializes internal variables"""
-    global _GLOBAL
-    if _GLOBAL is None:
-        _GLOBAL = Globals()
-    else:
-        raise Exception("Are you trying to reinitialize?  Call cleanup first.")
-
-def cleanup():
-    """Cleans up internal variables"""
-    global _GLOBAL
-    if _GLOBAL is None:
-        pass
-    del _GLOBAL
-    _GLOBAL = None
-
-def globalRAXML():
-    global _GLOBAL
-    if _GLOBAL is None:
-        init()
-    return _GLOBAL        
-
-#=============================================================================
-# model optimization
-
-def optimize_model(treefile, seqfile, extra="-m GTRGAMMA -n test"):
-    """Optimizes the RAXML model"""
-    myraxml = globalRAXML()
+    #=========================================
+    # utilities
     
-    cmd = "raxmlHPC -t %s -s %s %s" %\
-          (treefile, seqfile, extra)
-    raxml.init_program(myraxml.adef, myraxml.tr, cmd.split(' '))
+    def read_tree(self, tree):
+        """Read treelib tree to raxml tr"""
+        r,w = os.pipe()
+        fr,fw = os.fdopen(r, 'r'), os.fdopen(w, 'w')
 
-    raxml.optimize_model(myraxml.adef, myraxml.tr)
-    myraxml.optimal = True
-    
-#=============================================================================
-# SH test
+        tree.write(fw, oneline=True); fw.write('\n')
+        fw.close()
 
-##use scipy.stats to determine whether zscore is significant
-##sf = 1 - cdf, zprob = cdf
-##>>> stats.norm.sf(2)*2      # two-sided
-##0.045500263896358417
-##>>> (1-stats.zprob(2))*2    # two-sided
-##0.045500263896358417
-##>>> stats.zprob(2)
-##0.97724986805182079
-##>>> stats.norm.cdf(2)
-##0.97724986805182079
-   
-def compute_lik_test(tree, test="SH"):
-    """Computes the test statistic, returning the pvalue and Dlnl"""
-    if test == "SH":
-        myraxml = globalRAXML()
+        raxml.read_tree(fr, self.tr, self.adef)
+        fr.close()    
+
+    def draw_raxml_tree(self, *args, **kargs):
+        """Draw raxml tr -- adef and tr must have been previously defined"""
+        treestr = raxml.tree_to_string(self.tr, self.adef)
+        tree = treelib.parse_newick(treestr)
+        treelib.draw_tree(treelib.unroot(tree), *args, **kargs)
+
+    #=========================================
+    # model optimization
     
-        if not myraxml.optimal:
-            raise Exception("The model is not optimized: call optimize_model.\n")
-        if myraxml.best_LH is None:
-            myraxml.best_vector, myraxml.best_LH, myraxml.weight_sum = raxml.compute_best_LH(myraxml.tr)
-            
-        read_tree(tree)
-        zscore, Dlnl = raxml.compute_LH(myraxml.adef, myraxml.tr,
-                                        myraxml.best_LH, myraxml.weight_sum, myraxml.best_vector)
-        if Dlnl <= 0:
-            return 1.0, Dlnl
+    def optimize_model(self, treefile, seqfile, extra="-m GTRGAMMA -n test"):
+        """Optimizes the RAXML model"""
         
-        # really should just use pval = norm.sf(zscore) if one of the trees is the ML tree, 
-	# but SH test compares two a priori trees (to determine if T_x and T_y
-	# are equally good explanations of the data), so raxml uses two-sided test
-        return norm.sf(zscore)*2, Dlnl
+        cmd = "raxmlHPC -t %s -s %s %s" %\
+              (treefile, seqfile, extra)
+        raxml.init_program(self.adef, self.tr, cmd.split(' '))
 
-    raise Exception("%s test statistic not implemented" % test)
+        raxml.optimize_model(self.adef, self.tr)
+        self.optimal = True
 
-#=============================================================================
-# utilities
-
-def read_tree(tree):
-    """Read treelib tree to raxml tr"""
-    myraxml = globalRAXML()
+    #=========================================    
+    # test statistics
     
-    r,w = os.pipe()
-    fr,fw = os.fdopen(r, 'r'), os.fdopen(w, 'w')
+    def compute_lik_test(self, tree, test="SH"):
+        """Computes the test statistic, returning the pvalue and Dlnl"""
+        ##use scipy.stats to determine whether zscore is significant
+        ##sf = 1 - cdf, zprob = cdf
+        ##>>> stats.norm.sf(2)*2      # two-sided
+        ##0.045500263896358417
+        ##>>> (1-stats.zprob(2))*2    # two-sided
+        ##0.045500263896358417
+        ##>>> stats.zprob(2)
+        ##0.97724986805182079
+        ##>>> stats.norm.cdf(2)
+        ##0.97724986805182079
+        
+        if test == "SH":
+            if not self.optimal:
+                raise Exception("The model is not optimized: call optimize_model.\n")
+            if self.best_LH is None:
+                self.best_vector, self.best_LH, self.weight_sum = raxml.compute_best_LH(self.tr)
+                
+            self.read_tree(tree)
+            zscore, Dlnl = raxml.compute_LH(self.adef, self.tr,
+                                            self.best_LH, self.weight_sum, self.best_vector)
+            if Dlnl <= 0:
+                return 1.0, Dlnl
+            
+            # really should just use pval = norm.sf(zscore) if one of the trees is the ML tree, 
+            # but SH test compares two a priori trees (to determine if T_x and T_y
+            # are equally good explanations of the data), so raxml uses two-sided test
+            return norm.sf(zscore)*2, Dlnl
 
-    tree.write(fw, oneline=True); fw.write('\n')
-    fw.close()
-
-    raxml.read_tree(fr, myraxml.tr, myraxml.adef)
-    fr.close()    
-
-def draw_raxml_tree(*args, **kargs):
-    """Draw raxml tr -- adef and tr must have been previously defined"""
-    myraxml = globalRAXML()
-    treestr = raxml.tree_to_string(myraxml.tr, myraxml.adef)
-    tree = treelib.parse_newick(treestr)
-    treelib.draw_tree(treelib.unroot(tree), *args, **kargs)
+        raise Exception("%s test statistic not implemented" % test)

@@ -1,0 +1,12 @@
+RAxML Change Log
+-------------------
+
+raxml-0.2
+----------
+- refactored code into class
+
+
+raxml-0.1 (2011/11/12)
+-----------------------
+- initial release with TreeFix paper
+
