@@ -36,6 +36,7 @@ class RAxML:
         self.rooted = False	# RAxML uses unrooted trees
 
         self.adef = raxml.new_analdef()
+	raxml.init_adef(self.adef)
         self.tr = raxml.new_tree()
         self.optimal = False
         self.best_LH = None; self.weight_sum = None; self.best_vector = None
@@ -82,8 +83,13 @@ class RAxML:
     #=========================================    
     # test statistics
     
-    def compute_lik_test(self, tree, test="SH"):
-        """Computes the test statistic, returning the pvalue and Dlnl"""
+    def compute_lik_test(self, tree, test="SH", report="both"):
+        """
+        Computes the test statistic, returning the pvalue and Dlnl
+        report -- "over":  one-sided test, i.e. H0: LH_{tree} < LH_{input} v H1: LH_{tree} > LH_{input}
+                  "under": one-sided test, i.e. H0: LH_{tree} > LH_{input} v H1: LH_{tree} < LH_{input}
+                  "both":  two-sided test, i.e. H0: LH_{tree} == LH_{input} v H1: LH_{tree} != LH_{input}
+        """
         ##use scipy.stats to determine whether zscore is significant
         ##sf = 1 - cdf, zprob = cdf
         ##>>> stats.norm.sf(2)*2      # two-sided
@@ -110,6 +116,13 @@ class RAxML:
             # really should just use pval = norm.sf(zscore) if one of the trees is the ML tree, 
             # but SH test compares two a priori trees (to determine if T_x and T_y
             # are equally good explanations of the data), so raxml uses two-sided test
-            return norm.sf(zscore)*2, Dlnl
+            if report == "over":
+                return norm.sf(zscore), Dlnl
+            elif report == "under":
+                return 1-norm.sf(zscore), Dlnl
+            elif report == "both":
+                return norm.sf(abs(zscore))*2, Dlnl
+            else:
+                Exception("report must be 'over', 'under', or 'both': %s" % report)
 
         raise Exception("%s test statistic not implemented" % test)
