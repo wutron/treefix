@@ -3,7 +3,7 @@
 
 treefix_compute --type likelihood -m treefix.models.raxmlmodel.RAxMLModel \
     -s config/fungi.stree -S config/fungi.smap \
-    -A .nt.align.phylip -U .nt.raxml.tree \
+    -A .nt.align -U .nt.raxml.tree \
     sim-fungi/0/0.tree
 
 #============================================================================
@@ -18,7 +18,7 @@ treefix \
     --seed 1024 \
     -s config/fungi.stree \
     -S config/fungi.smap \
-    -A .nt.align.phylip \
+    -A .nt.align \
     -o .nt.raxml.tree \
     -n .nt.raxml.treefix.tree \
     -U .tree \
@@ -47,7 +47,7 @@ treefix \
     -E "-a sim-fungi/0/0.nt.align -p /seq/compbio/rasmus/work/spimap/train/param/fungi-sim.param -D 0.000732 -L 0.000859" \
     -s config/fungi.stree \
     -S config/fungi.smap \
-    -A .nt.align.phylip \
+    -A .nt.align \
     -o .nt.raxml.tree \
     -n .nt.raxml.treefix.spimap.tree \
     -U .tree \
@@ -68,7 +68,7 @@ treefix \
     -M treefix.models.coalmodel.CoalModel \
     -s config/fungi.stree \
     -S config/fungi.smap \
-    -A .nt.align.phylip \
+    -A .nt.align \
     -o .nt.raxml.tree \
     -n .nt.raxml.treefix.coal.tree \
     -U .tree \
@@ -89,7 +89,7 @@ treefix \
     -M treefix.models.dtlmodel.DTLModel \
     -s config/fungi.stree \
     -S config/fungi.smap \
-    -A .nt.align.phylip \
+    -A .nt.align \
     -o .nt.raxml.tree \
     -n .nt.raxml.treefix.dtl.tree \
     -U .tree \
@@ -99,7 +99,7 @@ treefix \
 #============================================================================
 # cleanup
 for fn in sim-fungi/0/*.*; do
-    if [ "$fn" == "sim-fungi/0/0.nt.align" ] || [ "$fn" == "sim-fungi/0/0.nt.align.phylip" ] || \
+    if [ "$fn" == "sim-fungi/0/0.nt.align" ] || \
        [ "$fn" == "sim-fungi/0/0.tree" ] || [ "$fn" == "sim-fungi/0/0.nt.raxml.tree" ]; then
         :
     else

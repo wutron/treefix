@@ -1,8 +1,9 @@
 TreeFix Change Log
 -------------------
 
-treefix-1.1
+treefix-1.1 (2012/02/29)
 ----------
+- added bootstrapping
 - refactored code for computing likelihoods and costs into reuseable modules
 - updated to use RAxML wrapper version 0.2
 

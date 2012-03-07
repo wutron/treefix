@@ -17,7 +17,6 @@ try:
     from numpy import random as nprnd
     NUMPY = True
 except:
-    import random as nprnd
     NUMPY = False
 
 # string to binary representation
@@ -45,7 +44,7 @@ from treefix import common
 
 # rasmus and compbio libraries
 from rasmus import treelib, util, timer
-from compbio import phylo
+from compbio import phylo, fasta, alignlib
 
 """
 All trees should be in newick format.
@@ -57,8 +56,19 @@ cost module should inherit treefix.models.CostModel
 #=============================
 # parser
 
-usage = "usage: %prog [options] <gene tree> ..."
-parser = optparse.OptionParser(usage=usage, version="%prog 1.1")
+parser = optparse.OptionParser(
+    usage = "usage: %prog [options] <gene tree> ...",
+    
+    version = "%prog 1.1",
+
+    description =
+         "TreeFix is a phylogenetic program for improving gene tree reconstructions using " +
+         "a test statistic for likelihood equivalence and a species tree aware cost function. " +
+         "See http://compbio.mit.edu/treefix for details.",
+         
+    epilog =
+         "Written by Yi-Chieh Wu (yjw@mit.edu), Massachusetts Institute of Technology. " +
+         "(c) 2011. Released under the terms of the GNU General Public License.")
 
 grp_io = optparse.OptionGroup(parser, "Input/Output")
 common.add_common_options(grp_io, 
@@ -76,6 +86,10 @@ grp_io.add_option("-n", "--newext", dest="newext",
                   metavar="<new tree file extension>",
                   default=".treefix.tree",
                   help="new tree file extension (default: \".treefix.tree\")")
+grp_io.add_option("-B", "--boottreeext", dest="boottreeext",
+                  metavar="<bootstrap trees file extension>",
+                  default=".treefix.boot.trees",
+                  help="bootstrap trees file extension (default: \".treefix.boot.trees\")")
 parser.add_option_group(grp_io)
 
 default_module = "treefix.models.raxmlmodel.RAxMLModel"
@@ -119,8 +133,13 @@ grp_smodel.add_option("-E", "--sextra", dest="sextra",
 parser.add_option_group(grp_smodel)
 
 grp_search = optparse.OptionGroup(parser, "Search Options")
+grp_search.add_option("-b", "--boot", dest="nboot",
+                      metavar="<# bootstraps>",
+                      default=1, type="int",
+                      help="number of bootstraps to perform (default: 1)")
 grp_search.add_option("--seed", dest="seed",
-		      type="int", metavar="<seed>",
+		      metavar="<seed>",
+                      type="int", 
 		      help="seed value for random generator")
 grp_search.add_option("--niter", dest="niter",
                       metavar="<# iterations>",
@@ -185,6 +204,10 @@ if DEBUG_SKIP_LIK and DEBUG_COMPUTE_ALL_LIK:
 if options.alpha < 0 or options.alpha > 1:
     parser.error("--alpha must be in [0,1]: %.5g" % options.alpha)
 
+if options.nboot < 1:
+    parser.error("--boot must be >= 1: %d" % options.nboot)
+boot = options.nboot > 1
+
 if options.niter < 1:
     parser.error("--iter must be >= 1: %d" % options.iter)
 
@@ -202,15 +225,10 @@ if len(treefiles) == 0:
 # read species tree and species map
 stree = treelib.read_tree(options.stree)
 gene2species = phylo.read_gene2species(options.smap)
+sps = stree.leaf_names()
 
 #=============================
 # utilities
-
-def output_tree(gtree, out, single_tree):
-    if single_tree:
-        gtree.write(out)
-    else:
-        gtree.write(out, oneline=True); out.write('\n')
 
 def log_tree(gtree, log, oneline=True, writeDists=False):
     treeout = StringIO.StringIO()
@@ -363,7 +381,9 @@ for treefile in treefiles:
         seed = options.seed
     else:
         seed = int(timer.time.time())
-    nprnd.seed(seed); random.seed(seed)
+    random.seed(seed)
+    if NUMPY:
+        nprnd.seed(seed)
 
     # start log
     if options.verbose >= 1:
@@ -373,7 +393,6 @@ for treefile in treefiles:
     # setup files
     alnfile = util.replace_ext(treefile, options.oldext, options.alignext)
     outfile = util.replace_ext(treefile, options.oldext, options.newext)
-    out = util.open_stream(outfile, "w")
 
     # read user tree
     if options.usertreeext:
@@ -389,46 +408,178 @@ for treefile in treefiles:
     else:
         usertreehash = None
 
-    # read input trees 
+    # read input tree
     gtrees = treelib.read_trees(treefile)
-    single_tree = len(gtrees) == 1
+    assert len(gtrees) == 1
+    gtree = gtrees[0]
+    genes = gtree.leaf_names()
 
-    # iterate through trees    
-    for treendx, gtree in enumerate(gtrees):
-        if options.verbose >= 1: log.start("Working on file '%s', tree %d" % (treefile, treendx))
+    # special cases: small tree -- no need to search
+    special = False
+    if len(genes) <= 2 or\
+       (len(genes) == 3 and not rooted):
+        # log
+        if options.verbose >= 1:
+            log.log("tree size <= 2 or == 3 and unrooted -- search skipped")
+            log.stop(); log.log("")
 
-        # special cases: no need to search
-        special = False
-	if len(gtree.leaves()) <= 2 or\
-	   (len(gtree.leaves()) == 3 and not rooted):
-	    output_tree(gtree, out, single_tree)
-	    if options.verbose >= 1: log.log("tree size <= 2 or == 3 and unrooted -- search skipped")
-	    if options.verbose >= 1: log.stop()
-	    continue
+        # output tree
+        gtree.write(out, oneline=False)
+        
+        # skip rest of algorithm
+        continue
 
-        # remove bootstraps and dists if present
-        for node in gtree:
-            node.dist = 0
-            if "boot" in node.data:
-                del node.data["boot"]
-	if "boot" in gtree.default_data:
-	    del gtree.default_data["boot"]
+    # remove bootstraps and dists if present
+    for node in gtree:
+        node.dist = 0
+        if "boot" in node.data:
+            del node.data["boot"]
+    if "boot" in gtree.default_data:
+        del gtree.default_data["boot"]
+    
+    # store input tree and whether input tree matches user tree
+    tree0 = gtree.copy()
+    treehash0_rooted = phylo.hash_tree(tree0)
+    treehash0_unrooted = phylo.hash_tree(unroot(tree0, newCopy=True))
+    treehash0 = treehash0_rooted if rooted else treehash0_unrooted
+    if usertreehash:
+        assert set(usertree.leaf_names()) == set(tree0.leaf_names())
+        searched_user_rooted0 = treehash0_rooted == usertreehash_rooted
+        searched_user_unrooted0 = treehash0_unrooted == usertreehash_unrooted
 
-        # runtime statistics
-	runtime_prop = 0
-	runtime_recon = 0
-	runtime_stat = 0
+    # read alignment
+    aln = alignlib.fasta.read_fasta(alnfile)
+    alnlen = len(aln.values()[0])
+
+    # runtime statistics
+    runtime_prop = 0
+    runtime_recon = 0
+    runtime_stat = 0
+
+    # special case -- one-to-one mapping, check congruent gene tree
+    if sorted(sps) == sorted(map(gene2species, genes)):
+        # log
+        if options.verbose >= 1:
+            log.start("Checking congruent gene tree"); log.log("")
+            
+        # initialize likelihood module
+        if options.verbose >= 1: log.start("Optimizing likelihood model")
+        module.optimize_model(gtree, aln, options.extra)
+        if options.verbose >= 1: log.stop(); log.log("")
+
+        # initialize cost module
+        if options.verbose >= 1: log.start("Optimizing cost model")
+        smodule.optimize_model(gtree, stree, gene2species, options.sextra)
+        if options.verbose >= 1: log.stop(); log.log("")
+
+        # make congruent gene tree and find cost
+        mintree = phylo.stree2gtree(stree, genes, gene2species)
+        cost = compute_cost(mintree)
+        if cost != smodule.mincost:
+            # reject
+            if options.verbose >= 1:
+                log.log("congruent")
+                log.log("congruent: reject")
+                log.log("congruent: cost\t= %.6g" % cost)
+                log.stop(); log.log("")
+        else:
+            # check likelihood
+            if DEBUG_SKIP_LIK:
+                pval, Dlnl = 1, 0
+            else:
+                timer_stat.start()
+                pval, Dlnl = compute_lik_test(mintree)
+                runtime_stat += timer_stat.stop()
+
+            if pval < options.alpha:
+                reject = True
+            else:
+                reject = False
+                
+                # add bootstraps
+                if boot:
+                    def walk(node):
+                        if not node.is_leaf():
+                            for child in node.children:
+                                walk(child)
+                            node.data["boot"] = 1
+                    for child in mintree.root.children:
+                        walk(child)
+               
+                    if mintree.root.children[0].is_leaf() or \
+                       mintree.root.children[1].is_leaf():
+                        mintree.root.children[0].data["boot"] =  0
+                        mintree.root.children[1].data["boot"] =  0
+                    else:
+                        b = (mintree.root.children[0].data["boot"] + \
+                             mintree.root.children[1].data["boot"]) / 2.0
+                        mintree.root.children[0].data["boot"] =  b
+                        mintree.root.children[1].data["boot"] =  b
+
+            # log
+            if options.verbose >= 1:
+                log.log("congruent")
+                log.log("congruent: %s" % ("reject" if reject else "accept"))
+                log.log("congruent: cost\t= %.6g" % cost)
+                if not DEBUG_SKIP_LIK:
+                    log.log("congruent: pval\t= %.6g" % pval)
+                    log.log("congruent: Dlnl\t= %.6g" % Dlnl)
+                if not reject:
+                    log_tree(mintree, log)
+                    log_tree(mintree, log, oneline=False)
+                else:
+                    log.log("")
+                log.stop(); log.log("")
+
+            # special case satisfied
+            if not reject:
+                # log
+                if options.verbose >= 1:
+                    log.stop(); log.log("")
+                
+                # output tree
+                mintree.write(outfile)
+
+                # skip rest of algorithm
+                continue
+
+    # setup output
+    if not boot:
+        out = util.open_stream(outfile, "w")
+    else:
+        boottreefile = util.replace_ext(treefile, options.oldext, options.boottreeext)
+        out = util.open_stream(boottreefile, "w")
+
+    # main algorithm
+    for b in xrange(options.nboot):                 # bootstrap search
+        # reset input tree
+        gtree = tree0.copy()
+        
+        # get bootstrapped alignment (equal number of columns, sample with replacement)
+        if boot:
+            if options.verbose >= 1:
+                log.start("boot: %d" % b); log.log("")
+
+            random.seed(seed + b*4096)               
+            if NUMPY:
+                nprnd.seed(seed + b*4096)
+                cols = nprnd.randint(alnlen, size=alnlen)
+            else:
+                cols = [random.randint(0, alnlen-1) for _ in xrange(alnlen)]
+            baln = alignlib.subalign(aln, cols)
+        else:
+            baln = aln
 
         # initialize likelihood module
         if not DEBUG_SKIP_LIK:
-            if options.verbose >= 1: log.log(''); log.start("Optimizing likelihood model")
-            module.optimize_model(gtree, alnfile, options.extra)
-            if options.verbose >= 1: log.stop(); log.log('')
+            if options.verbose >= 1: log.start("Optimizing likelihood model")
+            module.optimize_model(gtree, baln, options.extra)
+            if options.verbose >= 1: log.stop(); log.log("")
 
         # initialize cost module
-        if options.verbose >= 1: log.log(''); log.start("Optimizing cost model")
+        if options.verbose >= 1: log.start("Optimizing cost model")
         smodule.optimize_model(gtree, stree, gene2species, options.sextra)
-        if options.verbose >= 1: log.stop(); log.log('')
+        if options.verbose >= 1: log.stop(); log.log("")
         
         # log initial tree
         if options.reroot:
@@ -437,24 +588,16 @@ for treefile in treefiles:
             runtime_recon += timer_recon.stop()
         else:
             cost0 = compute_cost(gtree)
-	if options.verbose >= 1:
-	    log.log("search: initial")
-            log_tree(gtree, log)
-	    log_tree(gtree, log, oneline=False)
-	    log.log("search: cost\t= %.6g" % cost0)
-	
-        # store hash of initial tree and whether search has visited user tree
-        tree0 = gtree.copy()
-        treehash0_rooted = phylo.hash_tree(tree0)
-        treehash0_unrooted = phylo.hash_tree(unroot(tree0, newCopy=True))
-        treehash0 = treehash0_rooted if rooted else treehash0_unrooted
+        if options.verbose >= 1:
+            log.log("search: initial")
+            log.log("search: cost\t= %.6g" % cost0)
+	    log_tree(gtree, log)
+            log_tree(gtree, log, oneline=False)
+        
+        # whether search has visited user tree
         if usertreehash:
-            assert set(usertree.leaf_names()) == set(gtree.leaf_names())
-            searched_user_rooted = treehash0_rooted == usertreehash_rooted
-            searched_user_unrooted = treehash0_unrooted == usertreehash_unrooted
-
-        # initialize min values
-	mintree, mincost, minpval, minDlnl = tree0, cost0, None, 0
+            searched_user_rooted = searched_user_rooted0
+            searched_user_unrooted = searched_user_unrooted0
 
         # user tree statistics
         if usertreehash:
@@ -466,66 +609,70 @@ for treefile in treefiles:
                 runtime_stat += timer_stat.stop()
                 log.log("user: pval\t= %.6g" % userpval)
                 log.log("user: Dlnl\t= %.6g" % userDlnl)
-		log.log("\n")
-        
+                log.log("\n")
+                
+        # initialize min values
+        mintree, mincost, minpval, minDlnl = tree0, cost0, 1, 0
+            
         # search functions
         search = phylo.TreeSearchMix(gtree)
         search.add_proposer(phylo.TreeSearchNni(gtree), 0.5)
         search.add_proposer(phylo.TreeSearchSpr(gtree), 0.5)
-	uniques = set([treehash0])
+        uniques = set([treehash0])
 
         # do search
-	nproposals = 0; nuniques = 0; npools = 0; nemptypools = 0
-	ndiffrecon = 0; nrecon = 0
-        for i in xrange(options.niter):            # outer search
-	    # store initial search tree
-	    if rooted:
-	        treehash1 = phylo.hash_tree(search.tree)
+        nproposals = 0; nuniques = 0; npools = 0; nemptypools = 0
+        ndiffrecon = 0; nrecon = 0
+        for i in xrange(options.niter):             # outer search
+            # store initial search tree
+            if rooted:
+                treehash1 = phylo.hash_tree(search.tree)
             else:
                 treehash1 = phylo.hash_tree(unroot(search.tree, newCopy=True))
 
-	    # random values -- have to reseed in case module has a random number generator
-	    nprnd.seed(seed + i*1024); random.seed(seed + i*1024)
-	    if NUMPY:
-	        randvec = nprnd.random(2*options.nquickiter)
+            # random values -- have to reseed in case module has a random number generator
+            random.seed(seed + i*1024)
+            if NUMPY:
+                nprnd.seed(seed + i*1024)
+                randvec = nprnd.random(2*options.nquickiter)
             else:
-	        randvec = [nprnd.random() for _ in xrange(2*options.nquickiter)]
+                randvec = [random.random() for _ in xrange(2*options.nquickiter)]
 
             # search
-	    ntrees = 0
-	    pool = {}
+            ntrees = 0
+            pool = {}
             mincost_pool = mincost
 
             # note that reconroot is NOT propagated through the subproposals - doing so messes up the unique filter
-	    for j in xrange(options.nquickiter):   # inner search
-	        # propose tree
+            for j in xrange(options.nquickiter):   # inner search
+                # propose tree
                 timer_prop.start()
-		tree = search.propose()
-		runtime_prop += timer_prop.stop()
+                tree = search.propose()
+                runtime_prop += timer_prop.stop()
 
-		# only allow unique proposals but if I have been rejecting too much allow some non-uniques through
-		treehash = phylo.hash_tree(tree)
-		if treehash in uniques and ntrees >= 0.1*j:
-		    if options.verbose >= 3:
-		        log.log("prescreen: iter %d" % j)
-			log.log("prescreen: revert")
-			log.log("")
+                # only allow unique proposals but if I have been rejecting too much allow some non-uniques through
+                treehash = phylo.hash_tree(tree)
+                if treehash in uniques and ntrees >= 0.1*j:
+                    if options.verbose >= 3:
+                        log.log("prescreen: iter %d" % j)
+                        log.log("prescreen: revert")
+                        log.log("")
                     search.revert()
-		    continue
+                    continue
 
                 # save tree
                 nproposals += 1
-		gtree = tree.copy()
+                gtree = tree.copy()
                 if treehash not in uniques:
                     uniques.add(treehash)
                     nuniques += 1
-		ntrees += 1
+                ntrees += 1
 
-		if options.verbose >= 3:
+                if options.verbose >= 3:
                     log.log("prescreen: iter %d" % j)
 
-		# reconroot (some percentage of the time depending on options.reconroot)
-		if randvec[j+options.nquickiter] < options.freconroot:
+                # reconroot (some percentage of the time depending on options.reconroot)
+                if randvec[j+options.nquickiter] < options.freconroot:
                     timer_recon.start()
                     gtree, cost = recon_root(gtree, newCopy=False, returnCost=True)
                     runtime_recon += timer_recon.stop()
@@ -539,28 +686,28 @@ for treefile in treefiles:
                         ndiffrecon += 1
                         if options.verbose > 3:
                             log.log("prescreen: recon\t= changed")
-	        else:
-		    cost = compute_cost(gtree)
+                else:
+                    cost = compute_cost(gtree)
 
                 # log
-		if options.verbose >= 3:
+                if options.verbose >= 3:
                     log.log("prescreen: cost\t= %.6g" % cost)
 		    log_tree(gtree, log)
-                    log.log("")
+		    log.log("")
                 
-		# store to pool if unique
-		treehash_rooted = phylo.hash_tree(gtree)
+                # store to pool if unique
+                treehash_rooted = phylo.hash_tree(gtree)
                 treehash_unrooted = phylo.hash_tree(unroot(gtree, newCopy=True))
                 treehash = treehash_rooted if rooted else treehash_unrooted
-		if treehash != treehash1 and treehash not in pool:
-		    pool[treehash] = (gtree, cost, j)
+                if treehash != treehash1 and treehash not in pool:
+                    pool[treehash] = (gtree, cost, j)
                 if (usertreehash) and (not searched_user_rooted) and (treehash_rooted == usertreehash_rooted):
-		    searched_user_rooted = True
-		if (usertreehash) and (not searched_user_unrooted) and (treehash_unrooted == usertreehash_unrooted):
+                    searched_user_rooted = True
+                if (usertreehash) and (not searched_user_unrooted) and (treehash_unrooted == usertreehash_unrooted):
                     searched_user_unrooted = True
                 
-		# update mincost of pool and decide how to continue proposals from here
-		if cost < mincost_pool:
+                # update mincost of pool and decide how to continue proposals from here
+                if cost < mincost_pool:
                     # make more proposals off this one
                     mincost_pool = cost
                 elif cost == mincost_pool:
@@ -569,12 +716,12 @@ for treefile in treefiles:
                         search.revert()
                 else:
                     # start from new proposal 10% of the time
-		    if randvec[j] < 0.9:
-		        search.revert()
+                    if randvec[j] < 0.9:
+                        search.revert()
 
             # remove trees with higher costs
-	    if options.verbose >= 2:
-	        log.log("pool: size\t= %d" % len(pool))
+            if options.verbose >= 2:
+                log.log("pool: size\t= %d" % len(pool))
             pool = pool.values()
             if DEBUG_SKIP_COST:
                 fpool = pool
@@ -619,7 +766,7 @@ for treefile in treefiles:
                         break
 
             # debug
-	    if DEBUG_COMPUTE_ALL_LIK:
+            if DEBUG_COMPUTE_ALL_LIK:
                 dpool = (fpool[j+1:] if j+1 < nfpool else []) + [x for x in pool if x not in fpool]
                 for (gtree, cost, ndx) in dpool:
                     timer_stat.start()
@@ -635,22 +782,22 @@ for treefile in treefiles:
                         log.log("")
 
             # reset search and log
-	    search.reset()
-	    search.set_tree(mintree.copy())
-	    npools += 1
-	    if nfpool == 0:
+            search.reset()
+            search.set_tree(mintree.copy())
+            npools += 1
+            if nfpool == 0:
                 nemptypools += 1
                 if options.verbose >= 1:
-		    log.log("search: iter %d" % i)
-		    log.log("search: empty pool")
-		    log.log("\n")
-		continue
-	    if reject:
-		if options.verbose >= 1:
+                    log.log("search: iter %d" % i)
+                    log.log("search: empty pool")
+                    log.log("")
+                continue
+            if reject:
+                if options.verbose >= 1:
                     log.log("search: iter %d" % i)
                     log.log("search: reject")
-                    log.log("\n")
-		continue
+                    log.log("")
+                continue
             if options.verbose >= 1:
                 log.log("search: iter %d" % i)
                 log.log("search: accept")
@@ -658,77 +805,216 @@ for treefile in treefiles:
                 log.log("search: pval\t= %.6g" % minpval)
                 log.log("search: Dlnl\t= %.6g" % minDlnl)
                 log_tree(mintree, log)
-	        log_tree(mintree, log, oneline=False)
-                log.log("\n")
+                log_tree(mintree, log, oneline=False)
+                log.log("")
 
-	    # end early if tree with minimum cost found
-	    if (smodule.mincost != -util.INF) and (mincost == smodule.mincost):
-	        if options.verbose >= 1:
-	            log.log("search: break\n")
-	        break
+            # end early if tree with minimum cost found
+            if (smodule.mincost != -util.INF) and (mincost == smodule.mincost):
+                if options.verbose >= 1:
+                    log.log("search: break\n")
+                break
 
         # has the tree changed?
         if rooted:
-	    treehash = phylo.hash_tree(mintree)
+            treehash = phylo.hash_tree(mintree)
         else:
-	    # do a final reconroot
+            # do a final reconroot
             timer_recon.start()
             mintree, mincost = recon_root(mintree, newCopy=False, returnCost=True)
             runtime_recon += timer_recon.stop()
 
             treehash = phylo.hash_tree(unroot(mintree, newCopy=True))
-        same = treehash == treehash0
 
-        # output final statistics and tree
+        # output search statistics
         if options.verbose >= 1:
             log.log("search: final")
-	    if usertreehash:
-	        log.log("search: visited user tree\t= %s" % ("yes" if searched_user_rooted else "no"))
-	        log.log("search: visited (unrooted) user tree\t= %s" % ("yes" if searched_user_unrooted else "no"))
-	        log.log("search: equal user tree\t= %s" % ("yes" if treehash == usertreehash else "no"))
-            if same:
+            if usertreehash:
+                log.log("search: visited user tree\t= %s" % ("yes" if searched_user_rooted else "no"))
+                log.log("search: visited (unrooted) user tree\t= %s" % ("yes" if searched_user_unrooted else "no"))
+                log.log("search: equal user tree\t= %s" % ("yes" if treehash == usertreehash else "no"))
+            if treehash == treehash0:
                 log.log("search: changed\t= no")
             else:
                 log.log("search: changed\t= yes")
-		log.log("search: init cost\t= %.6g" % cost0)
+                log.log("search: init cost\t= %.6g" % cost0)
                 log.log("search: final cost\t= %.6g" % mincost)
-                if minpval:
-		    log.log("search: pval\t= %.6g" % minpval)
+                if not DEBUG_SKIP_LIK:
+                    log.log("search: pval\t= %.6g" % minpval)
                     log.log("search: Dlnl\t= %.6g" % minDlnl)
                 log_tree(mintree, log)
+                log_tree(mintree, log, oneline=False)
 
             log.log("")
-	    log.log("num proposals:\t%d" % nproposals)
+            log.log("num proposals:\t%d" % nproposals)
             log.log("num unique proposals:\t%d" % nuniques)
             if options.verbose >= 2:
-	        log.log("")
+                log.log("")
                 log.log("num pools:\t%d" % npools)
-		log.log("num empty pools:\t%d" % nemptypools)
-		if npools == 0:
-		    log.log("empty pool rate:\tINF")
-		else:
+                log.log("num empty pools:\t%d" % nemptypools)
+                if npools == 0:
+                    log.log("empty pool rate:\tINF")
+                else:
                     log.log("empty pool rate:\t%f" % (float(nemptypools)/npools))
             log.log("")
             log.log("num reconroot:\t%d" % nrecon)
             log.log("num diff reconroot:\t%d" % ndiffrecon)
-	    if nrecon == 0:
-	        log.log("diff reconroot rate:\tINF")
-	    else:
+            if nrecon == 0:
+                log.log("diff reconroot rate:\tINF")
+            else:
                 log.log("diff reconroot rate:\t%f" % (float(ndiffrecon)/nrecon))
             log.log("")
-            log.log("proposal runtime:\t%f" % runtime_prop)
-            log.log("reconroot runtime:\t%f" % runtime_recon)
-	    log.log("statistic runtime:\t%f" % runtime_stat)
-        output_tree(mintree, out, single_tree)
+            
+	# output tree
+	mintree.write(out, oneline=boot)
+	if boot:
+	    out.write('\n')
+	    if options.verbose >= 1:
+	       log.stop(); log.log("")
 
-        # cleanup
-        if options.cached: clear_caches()
-        if options.verbose >= 1: log.stop()
-
-    # close output stream
+    # get optimal tree from bootstraps
     out.close()
+    if boot:
+        if options.verbose >= 1:
+            log.start("Compiling bootstraps"); log.log("")
+        
+        # reset tree
+        gtree = tree0.copy()
+        
+        # initialize likelihood module
+        if not DEBUG_SKIP_LIK:
+            if options.verbose >= 1: log.start("Optimizing likelihood model")
+            module.optimize_model(gtree, aln, options.extra)
+            if options.verbose >= 1: log.stop(); log.log("")
 
+        # initialize cost module
+        if options.verbose >= 1: log.start("Optimizing cost model")
+        smodule.optimize_model(gtree, stree, gene2species, options.sextra)
+        if options.verbose >= 1: log.stop(); log.log("")
+
+        # reroot input tree
+        if options.reroot:
+            timer_recon.start()
+            gtree, cost0 = recon_root(gtree, newCopy=False, returnCost=True)
+            runtime_recon += timer_recon.stop()
+        else:
+            cost0 = compute_cost(gtree)
+
+        # initialize min values
+        mintree, mincost, minpval, minDlnl = gtree, cost0, 1, 0
+
+        # iterate through bootstraps
+        split_counts = util.Dict(1, 0)
+        ntrees = 0
+        for j,gtree in enumerate(treelib.iter_trees(boottreefile)):
+            # get split counts
+            ntrees += 1
+            for split in phylo.find_splits(gtree, rooted=True):
+                split_counts[split] += 1
+
+            # get reconciliation cost
+            cost = compute_cost(gtree)
+            if cost > mincost:
+                # reject topology
+                if options.verbose >= 2:
+                    log.log("boot: iter %d" % j)
+                    log.log("boot: reject")
+                    log.log("boot: cost\t= %.6g" % cost)
+                    log_tree(gtree, log)
+                    log.log("")
+                continue
+
+            # get pval, Dlnl using full alignment
+            if DEBUG_SKIP_LIK:
+                mintree, mincost, minpval, minDlnl = gtree, cost, 1, 0
+            else:
+                timer_stat.start()
+                pval, Dlnl = compute_lik_test(gtree)
+                runtime_stat += timer_stat.stop()
+
+                if (pval < options.alpha) or \
+                   (cost == mincost and Dlnl > minDlnl):
+                    # reject topology
+                    if options.verbose >= 1:
+                        log.log("boot: iter %d" % j)
+                        log.log("boot: reject")
+                        log.log("boot: cost\t= %.6g" % cost)
+                        log.log("boot: pval\t= %.6g" % pval)
+                        log.log("boot: Dlnl\t= %.6g" % Dlnl)
+                        log_tree(gtree, log)
+                        log.log("")
+                else:
+                    # accept topology (but do not break)
+                    mintree, mincost, minpval, minDlnl = gtree, cost, pval, Dlnl
+                    if options.verbose >= 1:
+                        log.log("boot: iter %d" % j)
+                        log.log("boot: accept")
+                        log.log("boot: cost\t= %.6g" % cost)
+                        log.log("boot: pval\t= %.6g" % pval)
+                        log.log("boot: Dlnl\t= %.6g" % Dlnl)
+                        log_tree(gtree, log)
+                        log.log("")                
+                
+        # compile split counts
+        counts = {}
+        for split, count in split_counts.iteritems():
+            counts[split[0]] = count
+            counts[split[1]] = count
+        
+        # add bootstrap values to mintree
+        def walk(node):
+            if node.is_leaf():
+                s = set([node.name])
+            else:
+                s = set()
+                for child in node.children:
+                    s.update(walk(child))
+                node.data["boot"] = counts.get(tuple(sorted(s)),0)/float(ntrees)
+            return s
+        for child in mintree.root.children:
+            walk(child)
+   
+        if mintree.root.children[0].is_leaf() or \
+           mintree.root.children[1].is_leaf():
+            mintree.root.children[0].data["boot"] =  0
+            mintree.root.children[1].data["boot"] =  0
+        else:
+            b = (mintree.root.children[0].data["boot"] + \
+                 mintree.root.children[1].data["boot"]) / 2.0
+            mintree.root.children[0].data["boot"] =  b
+            mintree.root.children[1].data["boot"] =  b
+
+        # log
+        if options.verbose >= 1:
+            log.log("boot: final")
+
+            if phylo.hash_tree(unroot(mintree, newCopy=True)) == treehash0:
+                log.log("boot: changed\t= no")
+            else:
+                log.log("boot: changed\t= yes")
+                log.log("boot: init cost\t= %.6g" % cost0)
+                log.log("boot: final cost\t= %.6g" % mincost)
+                if not DEBUG_SKIP_LIK:
+                    log.log("boot: pval\t= %.6g" % minpval)
+                    log.log("boot: Dlnl\t= %.6g" % minDlnl)
+                log_tree(mintree, log)
+                log_tree(mintree, log, oneline=False)
+                
+            log.stop(); log.log("")
+
+        # output tree
+        mintree.write(outfile)
+
+    # output runtime statistics
+    if options.verbose >= 1:
+        log.log("proposal runtime:\t%f" % runtime_prop)
+        log.log("reconroot runtime:\t%f" % runtime_recon)
+        log.log("statistic runtime:\t%f" % runtime_stat)
+
+    # stop log
     if options.verbose >= 1: log.stop(); log.log("\n\n")
+
+    # cleanup
+    if options.cached: clear_caches()
 
 # close log
 if options.verbose >= 1 and options.log != "-":

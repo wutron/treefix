@@ -41,7 +41,7 @@ treefix -h
 treefix \
     -s config/fungi.stree \
     -S config/fungi.smap \
-    -A .nt.align.phylip \
+    -A .nt.align \
     -o .nt.raxml.tree \
     -n .nt.raxml.treefix.tree \
     -U .tree \
@@ -70,7 +70,7 @@ treefix_compute --type likelihood -m treefix.models.raxmlmodel.RAxMLModel --show
 # compute pval and Dlnl for true tree using RAxML tree to optimize
 treefix_compute --type likelihood -m treefix.models.raxmlmodel.RAxMLModel \
     -s config/fungi.stree -S config/fungi.smap \
-    -A .nt.align.phylip -U .nt.raxml.tree \
+    -A .nt.align -U .nt.raxml.tree \
     sim-fungi/0/0.tree
 
 # clean up

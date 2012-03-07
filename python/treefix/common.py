@@ -9,6 +9,7 @@ def add_common_options(parser,
                        stree=False, smap=False,
 		       treeext=False, alignext=False,
 		       clade=False):
+    """Add common options to parser"""
     if infiles:
         parser.add_option("-i", "--input", dest="input",
                           action="append",
@@ -38,9 +39,9 @@ def add_common_options(parser,
 			  default=".align",
 			  help="alignment file extension (default: \".align\")")
     if clade:
-            parser.add_option("-c", "--clade", dest="clade",
-	                      metavar="<clade file>",
-			      help="clade file")
+        parser.add_option("-c", "--clade", dest="clade",
+                          metavar="<clade file>",
+                          help="clade file")
 
 def move_option(parser, opt_str, opt_grp):
     """Move option 'opt_str' from 'parser' to 'opt_grp'"""
@@ -51,13 +52,14 @@ def move_option(parser, opt_str, opt_grp):
 
 def check_req_options(parser, options,
                       species=True, clade=True):
+    """Check if required options are present"""
     if species and ((not options.stree) or (not options.smap)):
         parser.error("--stree and --smap are required")
     if clade and (not options.clade):
         parser.error("--clade is required")
 
 def get_input_files(parser, options, args):
-    # determine input files from options
+    """Determine input files from options"""
     infiles = []
     if options.input:
         for arg in options.input:
@@ -79,13 +81,13 @@ def get_input_files(parser, options, args):
 # clades
 
 def get_clade(names, stree):
-    # get clade of given species
+    """Get clade of given species"""
     head = treelib.lca([stree.nodes[name] for name in names])
     assert sorted(names) == sorted(node.name for node in head.leaves())
     return [head] + head.descendants()
 
 def read_clades(filename, stree):
-    # read cladefile
+    """Read a clade file"""
     clades = {}
     for toks in util.DelimReader(filename):
 	name, sps = toks[0], toks[1].split(',')
@@ -94,8 +96,10 @@ def read_clades(filename, stree):
     return clades
 
 def label_clades(gtree, recon, clades):
-    # find all subclades by finding all branches separating clade,
-    # e.g. node is in subtree of clade but parent node is not
+    """
+    Find all subclades by finding all branches separating clade,
+    e.g. node is in subtree of clade but parent node is not.
+    """
     nodes = {}
     for cname, clade in clades.iteritems():
         for node in gtree.preorder():

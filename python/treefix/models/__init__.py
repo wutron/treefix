@@ -21,7 +21,7 @@ class StatModel(object):
         if self.parser:
             self.parser.print_help(file)
 
-    def optimize_model(self, gtree, seqfile, extra):
+    def optimize_model(self, gtree, aln, extra):
         """
         Optimizes the underlying model in the module given the tree, seq (alignment),
         and extra parameter arguments.

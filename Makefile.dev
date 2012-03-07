@@ -23,7 +23,8 @@ RASMUS_PLY_FILES = README \
 COMPBIO_SRC_FILES = __init__ \
                     fasta \
 		    phylo \
-		    seqlib
+		    seqlib \
+		    alignlib
 
 VERSIONS = versions.txt
 
