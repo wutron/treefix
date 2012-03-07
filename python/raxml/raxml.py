@@ -48,6 +48,7 @@ new_tree = _raxml.new_tree
 delete_tree = _raxml.delete_tree
 read_tree = _raxml.read_tree
 tree_to_string = _raxml.tree_to_string
+init_adef = _raxml.init_adef
 init_program = _raxml.init_program
 optimize_model = _raxml.optimize_model
 compute_best_LH = _raxml.compute_best_LH

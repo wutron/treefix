@@ -1,7 +1,7 @@
 RAxML Change Log
 -------------------
 
-raxml-0.2
+raxml-0.2 (2012/02/29)
 ----------
 - refactored code into class
 

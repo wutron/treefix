@@ -2552,12 +2552,16 @@ SWIG_FromCharPtr(const char *cptr)
 
 
 /* raxml axml.c: main */
+void init_adef(analdef *adef)
+{
+    initAdef(adef);
+}
+
+/* raxml axml.c: main */
 void init_program(analdef *adef, tree *tr,
                   int argc, char **argv)
 {
-    initAdef(adef);
-
-    get_args(argc,argv, adef, tr);
+    get_args(argc, argv, adef, tr);
 }
 
 /* raxml axml.c: main -> TREE_EVALUATION -> likelihood test */
@@ -2954,6 +2958,27 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_init_adef(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  analdef *arg1 = (analdef *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:init_adef",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_analdef, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "init_adef" "', argument " "1"" of type '" "analdef *""'"); 
+  }
+  arg1 = (analdef *)(argp1);
+  init_adef(arg1);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_init_program(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   analdef *arg1 = (analdef *) 0 ;
@@ -3193,6 +3218,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_tree", _wrap_delete_tree, METH_VARARGS, NULL},
 	 { (char *)"read_tree", _wrap_read_tree, METH_VARARGS, NULL},
 	 { (char *)"tree_to_string", _wrap_tree_to_string, METH_VARARGS, NULL},
+	 { (char *)"init_adef", _wrap_init_adef, METH_VARARGS, NULL},
 	 { (char *)"init_program", _wrap_init_program, METH_VARARGS, NULL},
 	 { (char *)"optimize_model", _wrap_optimize_model, METH_VARARGS, NULL},
 	 { (char *)"compute_best_LH", _wrap_compute_best_LH, METH_VARARGS, NULL},

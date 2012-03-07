@@ -47,12 +47,16 @@ char *tree_to_string(tree *tr, analdef *adef)
 
 %inline %{
 /* raxml axml.c: main */
+void init_adef(analdef *adef)
+{
+    initAdef(adef);
+}
+
+/* raxml axml.c: main */
 void init_program(analdef *adef, tree *tr,
                   int argc, char **argv)
 {
-    initAdef(adef);
-
-    get_args(argc,argv, adef, tr);
+    get_args(argc, argv, adef, tr);
 }
 
 /* raxml axml.c: main -> TREE_EVALUATION -> likelihood test */
