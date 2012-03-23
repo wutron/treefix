@@ -3,7 +3,9 @@ TreeFix Change Log
 
 treefix-1.1 (2012/02/29)
 ----------
-- added bootstrapping
+- added bootstrap analysis
+- removed caching
+- added pre-processing step to check congruent gene tree
 - refactored code for computing likelihoods and costs into reuseable modules
 - updated to use RAxML wrapper version 0.2
 
