@@ -11,7 +11,7 @@ from treefix import common
 
 # rasmus libraries
 from rasmus import treelib, util
-from compbio import phylo
+from compbio import phylo, alignlib
 
 usage = "usage: %prog [options] <gene tree> ..."
 parser = optparse.OptionParser(usage=usage)
@@ -115,6 +115,7 @@ for treefile in treefiles:
     # setup files
     if options.type == "likelihood":
         alnfile = util.replace_ext(treefile, options.oldext, options.alignext)
+	aln = alignlib.fasta.read_fasta(alnfile)
     outfile = util.replace_ext(treefile, options.oldext, options.newext)
     out = util.open_stream(outfile, "w")
 
@@ -130,7 +131,7 @@ for treefile in treefiles:
 
     if options.type == "likelihood":
         # optimize model
-        module.optimize_model(usertree, alnfile, options.extra)
+        module.optimize_model(usertree, aln, options.extra)
     elif options.type == "cost":
         # optimize model
         module.optimize_model(usertree, stree, gene2species, options.extra)

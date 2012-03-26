@@ -1,8 +1,8 @@
 TreeFix Change Log
--------------------
+-----------------------
 
 treefix-1.1 (2012/02/29)
-----------
+-----------------------
 - added bootstrap analysis
 - removed caching
 - added pre-processing step to check congruent gene tree

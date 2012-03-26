@@ -31,6 +31,8 @@ treefix -h
 #                         old tree file extension (default: ".tree")
 #     -n <new tree file extension>, --newext=<new tree file extension>
 #                         new tree file extension (default: ".treefix.tree")
+#     -U <user tree file extension>, --usertreeext=<user tree file extension>
+#                         check if user tree is visited in search
 #
 #   Information:
 #     -V <verbosity level>, --verbose=<verbosity level>
@@ -74,7 +76,7 @@ treefix_compute --type likelihood -m treefix.models.raxmlmodel.RAxMLModel \
     sim-fungi/0/0.tree
 
 # clean up
-rm sim-fungi/0/0.out
+rm sim-fungi/0/0.output
 
 #=============================
 # test dup/loss module
@@ -89,4 +91,4 @@ treefix_compute --type cost -m treefix.models.duplossmodel.DupLossModel \
     sim-fungi/0/0.nt.raxml.tree
 
 # clean up
-rm sim-fungi/0/0.out
+rm sim-fungi/0/0.output

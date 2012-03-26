@@ -44,7 +44,7 @@ from treefix import common
 
 # rasmus and compbio libraries
 from rasmus import treelib, util, timer
-from compbio import phylo, fasta, alignlib
+from compbio import phylo, alignlib
 
 #==========================================================
 # parser
@@ -669,121 +669,7 @@ def search_landscape(gtree, stree, gene2species, aln,
         log.log("")
 
     # return optimum
-    return mintree, mincost, minpval, minDlnl
-
-def search_boot(gtree, stree, gene2species, aln, boottreefile,
-                module, smodule, rooted,
-                optimize=True):
-    """find optimal tree among bootstraps, then search landscape starting from this optimal tree"""
-
-    # global variables
-    global options, seed
-    if options.verbose >= 1:
-        global log
-    global DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
-    global runtime_prop, runtime_recon, runtime_stat
-    global treehash0
-        
-    if options.verbose >= 1:
-        log.start("Compiling bootstraps"); log.log("")
-    
-    # work with new copy
-    gtree = gtree.copy()
-    tree0 = gtree.copy()
-
-    if optimize:
-        # optimize likelihood module
-        if not DEBUG_SKIP_LIK:
-            if options.verbose >= 1: log.start("Optimizing likelihood model")
-            module.optimize_model(gtree, aln, options.extra)
-            if options.verbose >= 1: log.stop(); log.log("")
-
-        # optimize cost module
-        if options.verbose >= 1: log.start("Optimizing cost model")
-        smodule.optimize_model(gtree, stree, gene2species, options.sextra)
-        if options.verbose >= 1: log.stop(); log.log("")
-
-    # compute cost of input tree
-    cost0 = smodule.compute_cost(gtree)
-
-    # initialize min values
-    mintree, mincost, minpval, minDlnl = tree0, cost0, 1, 0
-
-    # iterate through bootstraps to find new starting tree
-    for j,gtree in enumerate(treelib.iter_trees(boottreefile)):
-        # get reconciliation cost
-        cost = smodule.compute_cost(gtree)
-        if cost > mincost:
-            # reject topology
-            if options.verbose >= 2:
-                log.log("boot: iter %d" % j)
-                log.log("boot: reject")
-                log.log("boot: cost\t= %.6g" % cost)
-                log_tree(gtree, log)
-                log.log("")
-            continue
-
-        # get pval, Dlnl using full alignment
-        if DEBUG_SKIP_LIK:
-            mintree, mincost, minpval, minDlnl = gtree, cost, 1, 0
-        else:
-            gtimer.start()
-            pval, Dlnl = module.compute_lik_test(gtree, options.test)
-            runtime_stat += gtimer.stop()
-
-            if (pval < options.alpha) or \
-               (cost == mincost and Dlnl > minDlnl):
-                # reject topology
-                if options.verbose >= 1:
-                    log.log("boot: iter %d" % j)
-                    log.log("boot: reject")
-                    log.log("boot: cost\t= %.6g" % cost)
-                    log.log("boot: pval\t= %.6g" % pval)
-                    log.log("boot: Dlnl\t= %.6g" % Dlnl)
-                    log_tree(gtree, log)
-                    log.log("")
-            else:
-                # accept topology (but do not break)
-                mintree, mincost, minpval, minDlnl = gtree, cost, pval, Dlnl
-                if options.verbose >= 1:
-                    log.log("boot: iter %d" % j)
-                    log.log("boot: accept")
-                    log.log("boot: cost\t= %.6g" % cost)
-                    log.log("boot: pval\t= %.6g" % pval)
-                    log.log("boot: Dlnl\t= %.6g" % Dlnl)
-                    log_tree(gtree, log)
-                    log.log("")
-
-    # search gene tree landscape using new starting tree
-    mintree, mincost, minpval, minDlnl = \
-             search_landscape(mintree, stree, gene2species, aln,
-                              module, smodule, rooted,
-                              optimize=False)
-
-    # add bootstraps to tree
-    phylo.add_bootstraps(mintree, treelib.iter_trees(boottreefile), rooted=True)
-
-    # log
-    if options.verbose >= 1:
-        log.log("boot: final")
-
-        if phylo.hash_tree(unroot(mintree, newCopy=True)) == treehash0:
-            log.log("boot: changed\t= no")
-        else:
-            log.log("boot: changed\t= yes")
-            log.log("boot: init cost\t= %.6g" % cost0)
-            log.log("boot: final cost\t= %.6g" % mincost)
-            if not DEBUG_SKIP_LIK:
-                log.log("boot: pval\t= %.6g" % minpval)
-                log.log("boot: Dlnl\t= %.6g" % minDlnl)
-            log_tree(mintree, log)
-            log_tree(mintree, log, oneline=False)
-            
-        log.stop(); log.log("")
-
-    # return optimum
-    return mintree, mincost, minpval, minDlnl
-    
+    return mintree, mincost, minpval, minDlnl   
 
 #==========================================================
 # main
@@ -970,7 +856,7 @@ def main():
                 if options.verbose >= 1:
                    log.stop(); log.log("")
 
-        # write optimal tree or get optimal tree from bootstraps
+        # write optimal tree or get optimal tree with bootstrap support
 	if not boot:
 	    mintree.write(outfile)
         else:
@@ -980,8 +866,11 @@ def main():
                     
             # search
             mintree, mincost, minpval, minDlnl = \
-                     search_boot(gtree, stree, gene2species, aln, boottreefile,
-                                 module, smodule, rooted)
+                     search_landscape(gtree, stree, gene2species, aln,
+                                      module, smodule, rooted)
+
+            # add bootstraps
+            phylo.add_bootstraps(mintree, treelib.iter_trees(boottreefile), rooted=True)
             
             # output tree
             mintree.write(outfile)

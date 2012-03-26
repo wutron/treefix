@@ -24,7 +24,8 @@ COMPBIO_SRC_FILES = __init__ \
                     fasta \
 		    phylo \
 		    seqlib \
-		    alignlib
+		    alignlib \
+		    phylip
 
 VERSIONS = versions.txt
 
