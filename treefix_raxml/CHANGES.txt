@@ -1,10 +1,10 @@
 RAxML Change Log
--------------------
+-----------------------
 
 raxml-0.2 (2012/02/29)
-----------
+-----------------------
 - refactored code into class
-
+- changed p-value to one-sided and two-sided tests
 
 raxml-0.1 (2011/11/12)
 -----------------------
