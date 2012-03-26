@@ -27,7 +27,7 @@ parser.add_option("-T", "--treeext", dest="treeext",
                   help="tree file extension (default: \".tree\")")
 parser.add_option("-A", "--alignext", dest="alignext",
                   metavar="<alignment file extension>",
-                  default=".align",
+                  default=".align.phylip",
                   help="alignment file extension (default: \".align\")")
 parser.add_option("--niter", dest="niter",
                   metavar="<# iterations>",
@@ -64,8 +64,8 @@ seqfile = util.replace_ext(treefile, options.treeext, options.alignext)
 out = util.open_stream(options.output, 'w')
 
 util.tic("Initializing RAXML and optimizing...")
-raxml.init()
-raxml.optimize_model(treefile, seqfile, options.extra)
+module = raxml.RAxML()
+module.optimize_model(treefile, seqfile, options.extra)
 util.toc()
 
 tree = treelib.read_tree(treefile)
@@ -87,7 +87,7 @@ for i in xrange(options.niter):
     tree.write(out, oneline=True); out.write('\n'); out.flush()
 
     util.tic("Computing LH...")
-    p, Dlnl = raxml.compute_lik_test(tree)
+    p, Dlnl = module.compute_lik_test(tree)
     util.log("pvalue: %.3f, Dlnl: %.3f" % (p, Dlnl))
     util.toc()
 
@@ -105,4 +105,3 @@ for i in xrange(options.niter):
 
 # cleanup
 out.close()
-raxml.cleanup()

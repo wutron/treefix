@@ -8,14 +8,14 @@ import os,sys
 import optparse
 
 # raxml library
-import raxml
+from raxml import raxml
 
 # scipy library
 from scipy.stats import norm
 
 # rasmus and compbio libraries
 from rasmus import treelib, util
-from compbbio import phylo
+from compbio import phylo
 
 #=============================
 # parser
@@ -76,6 +76,7 @@ seqfile = util.replace_ext(treefile, options.treeext, options.alignext)
 out = util.open_stream(options.output, 'w')
 
 adef = raxml.new_analdef()
+raxml.init_adef(adef)
 tr = raxml.new_tree()
 cmd = "raxmlHPC -t %s -s %s %s" %\
       (treefile, seqfile, options.extra)
