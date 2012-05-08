@@ -46,9 +46,11 @@ class CoalModel(CostModel):
         # write species tree and gene tree using species map
         treeout = util.open_stream(self.treefile, 'w')
         self.stree.write(treeout, oneline=True)
+        treeout.write('\n')
         edges = []
         for gtree, edge in self._reroot_helper(gtree, newCopy=newCopy, returnEdge=True):
-            gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True)
+            gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True, writeData=lambda x: "")
+            treeout.write('\n')
             edges.append(edge)
         treeout.close()
 
@@ -63,11 +65,7 @@ class CoalModel(CostModel):
         i = None
         n = len(edges)
         costs = [None]*n
-        while True:
-            line = proc.stdout.readline()
-            if line == '':
-                break
-            
+        for line in proc.stdout:
             m = re.match("\[ gene tree #(\d+) \]", line)
             if m:
                 i = int(m.groups()[0]) - 1
@@ -98,8 +96,10 @@ class CoalModel(CostModel):
        
         # write species tree and gene tree using species map
         treeout = util.open_stream(self.treefile, 'w')
-        self.stree.write(treeout, oneline=True)
+        self.stree.write(treeout, oneline=True, writeData=lambda x: "")
+        treeout.write('\n')
         gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True)
+        treeout.write('\n')
         treeout.close()
 
         # execute command
@@ -111,11 +111,7 @@ class CoalModel(CostModel):
                 
         # parse output
         cost = None
-        while True:
-            line = proc.stdout.readline()
-            if line == '':
-                break
-            
+        for line in proc.stdout:
             toks = line.split(':')
             if toks[0] == "deep coalecense":
                 cost = int(toks[1])

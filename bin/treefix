@@ -6,6 +6,8 @@
 # (2) computing the species tree aware cost (inherits treefix.models.CostModel).
 #
 
+VERSION = "1.1.1"
+
 # python libraries
 import os, sys, optparse
 import StringIO
@@ -18,25 +20,6 @@ try:
     NUMPY = True
 except:
     NUMPY = False
-
-# string to binary representation
-try:
-    if bin(0): pass
-except NameError, ne:
-    def bin(x):
-        """
-        bin(number) -> string
-        Stringifies an int or long in base 2.
-        """
-        if x < 0: return '-' + bin(-x)
-        out = []
-        if x == 0: out.append('0')
-        while x > 0:
-            out.append('01'[x & 1])
-            x >>= 1
-        try: return '0b' + ''.join(reversed(out))
-        except NameError, ne2: out.reverse()
-        return '0b' + ''.join(out)
 
 # treefix libraries
 import treefix
@@ -55,7 +38,7 @@ def parse_args():
     parser = optparse.OptionParser(
         usage = "usage: %prog [options] <gene tree> ...",
         
-        version = "%prog 1.1",
+        version = "%prog " + VERSION,
 
         description =
              "TreeFix is a phylogenetic program for improving gene tree reconstructions using " +
@@ -117,7 +100,7 @@ def parse_args():
     parser.add_option_group(grp_test)
 
     default_smodule = "treefix.models.duplossmodel.DupLossModel"
-    grp_smodel = optparse.OptionGroup(parser, "Species Tree Cost Model")
+    grp_smodel = optparse.OptionGroup(parser, "Reconciliation Cost Model")
     grp_smodel.add_option("-M", "--smodule", dest="smodule",
                           metavar="<module for species tree aware cost calculations>",
                           default=default_smodule,
@@ -152,6 +135,8 @@ def parse_args():
     parser.add_option_group(grp_search)
 
     grp_info = optparse.OptionGroup(parser, "Information")
+    common.move_option(parser, "--version", grp_info)
+    common.move_option(parser, "--help", grp_info)
     grp_info.add_option("-V", "--verbose", dest="verbose",
                         metavar="<verbosity level>",
                         default="0", choices=["0","1","2","3"],
@@ -160,7 +145,6 @@ def parse_args():
                         metavar="<log file>",
                         default="-",
                         help="log filename.  Use '-' to display on stdout.")
-    common.move_option(parser, "--help", grp_info)
     parser.add_option_group(grp_info)
 
     grp_debug = optparse.OptionGroup(parser, "Debug")
@@ -195,10 +179,10 @@ def parse_args():
 
     # other options
     if options.alpha < 0 or options.alpha > 1:
-        parser.error("--alpha must be in [0,1]: %.5g" % options.alpha)
+        parser.error("--alpha/-p/--pval must be in [0,1]: %.5g" % options.alpha)
 
     if options.nboot < 1:
-        parser.error("--boot must be >= 1: %d" % options.nboot)
+        parser.error("-b/--boot must be >= 1: %d" % options.nboot)
 
     if options.niter < 1:
         parser.error("--iter must be >= 1: %d" % options.iter)
@@ -218,6 +202,25 @@ def parse_args():
 
 #==========================================================
 # utilities
+
+# string to binary representation
+try:
+    if bin(0): pass
+except NameError, ne:
+    def bin(x):
+        """
+        bin(number) -> string
+        Stringifies an int or long in base 2.
+        """
+        if x < 0: return '-' + bin(-x)
+        out = []
+        if x == 0: out.append('0')
+        while x > 0:
+            out.append('01'[x & 1])
+            x >>= 1
+        try: return '0b' + ''.join(reversed(out))
+        except NameError, ne2: out.reverse()
+        return '0b' + ''.join(out)
 
 def log_tree(gtree, log, oneline=True, writeDists=False):
     """print tree to log"""
@@ -256,6 +259,10 @@ def check_small_tree(gtree, rooted=False):
     global options
     if options.verbose >= 1:
         global log
+   
+    # log
+    if options.verbose >= 1:
+        log.start("Checking for small input gene tree"); log.log("")
 
     # small tree?
     genes = gtree.leaf_names()
@@ -268,7 +275,52 @@ def check_small_tree(gtree, rooted=False):
 
         # is small tree
         return True
+
+    # log
+    if options.verbose >= 1:
+        log.stop(); log.log("")
     
+    return False
+
+def check_input_tree(gtree, stree, gene2species, smodule):
+    """check the input gene tree"""
+
+    # global variables
+    global options
+    global DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
+    global gtimer, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
+    if options.verbose >= 1:
+        global log
+        
+    # log
+    if options.verbose >= 1:
+        log.start("Checking input gene tree cost"); log.log("")
+
+    # initialize cost module
+    if options.verbose >= 1: log.start("Optimizing cost model")
+    smodule.optimize_model(gtree, stree, gene2species, options.sextra)
+    if options.verbose >= 1: log.stop(); log.log("")
+
+    # find cost
+    gtimer.start()
+    cost = smodule.compute_cost(gtree)
+    runtime_cost += gtimer.stop()
+
+    # input gene tree achieved minimum cost?
+    if cost == smodule.mincost:
+        # log
+        if options.verbose >= 1:
+            log.log("input")
+            log.log("input: cost\t= %.6g" % cost)
+            log.stop(); log.log("")
+
+        # input tree achieved minimum cost
+        return True
+
+    # log
+    if options.verbose >= 1:
+        log.stop(); log.log("")
+        
     return False
 
 def check_congruent_tree(gtree, stree, gene2species, aln,
@@ -278,7 +330,7 @@ def check_congruent_tree(gtree, stree, gene2species, aln,
     # global variables
     global options
     global DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
-    global gtimer, runtime_prop, runtime_recon, runtime_stat
+    global gtimer, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
     if options.verbose >= 1:
         global log
     
@@ -304,15 +356,11 @@ def check_congruent_tree(gtree, stree, gene2species, aln,
 
     # make congruent gene tree and find cost
     mintree = phylo.stree2gtree(stree, genes, gene2species)
+    gtimer.start()
     cost = smodule.compute_cost(mintree)
-    if cost != smodule.mincost:
-        # reject
-        if options.verbose >= 1:
-            log.log("congruent")
-            log.log("congruent: reject")
-            log.log("congruent: cost\t= %.6g" % cost)
-            log.stop(); log.log("")
-    else:
+    runtime_cost += gtimer.stop()
+
+    if cost == smodule.mincost:
         # check likelihood
         if DEBUG_SKIP_LIK:
             pval, Dlnl = 1, 0
@@ -345,12 +393,18 @@ def check_congruent_tree(gtree, stree, gene2species, aln,
                 log.log("")
             log.stop(); log.log("")
 
-        # is congruent tree?
-        if reject:
-            return False, None
-        
-        # skip rest of algorithm
-        return True, mintree
+        # congruent tree achieved minimum cost
+        if not reject:
+            return True, mintree
+    else:
+        # reject
+        if options.verbose >= 1:
+            log.log("congruent")
+            log.log("congruent: reject")
+            log.log("congruent: cost\t= %.6g" % cost)
+            log.stop(); log.log("")
+
+    return False, None
 
 #==========================================================
 # search routines
@@ -365,7 +419,7 @@ def search_landscape(gtree, stree, gene2species, aln,
     if options.verbose >= 1:
         global log
     global DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
-    global gtimer, runtime_prop, runtime_recon, runtime_stat
+    global gtimer, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
     global treehash0, usertree
     if options.usertreeext:
         global usertreehash, usertreehash_rooted, usertreehash_unrooted, \
@@ -391,9 +445,11 @@ def search_landscape(gtree, stree, gene2species, aln,
     if options.reroot:
         gtimer.start()
         gtree, cost0 = smodule.recon_root(gtree, newCopy=False, returnCost=True)
-        runtime_recon += gtimer.stop()
+        runtime_reconroot += gtimer.stop()
     else:
+        gtimer.start()
         cost0 = smodule.compute_cost(gtree)
+        runtime_cost += gtimer.stop()
     if options.verbose >= 1:
         log.log("search: initial")
         log.log("search: cost\t= %.6g" % cost0)
@@ -405,7 +461,9 @@ def search_landscape(gtree, stree, gene2species, aln,
         searched_user_rooted = searched_user_rooted0
         searched_user_unrooted = searched_user_unrooted0
 
+        gtimer.start()
         usercost = smodule.compute_cost(usertree)
+        runtime_cost += gtimer.stop()
         if options.verbose >= 1:
             log.log("user: cost\t= %.6g" % usercost)
             gtimer.start()
@@ -479,7 +537,7 @@ def search_landscape(gtree, stree, gene2species, aln,
             if randvec[j+options.nquickiter] < options.freconroot:
                 gtimer.start()
                 gtree, cost = smodule.recon_root(gtree, newCopy=False, returnCost=True)
-                runtime_recon += gtimer.stop()
+                runtime_reconroot += gtimer.stop()
 
                 # did reconroot change the tree?
                 nrecon += 1
@@ -491,7 +549,9 @@ def search_landscape(gtree, stree, gene2species, aln,
                     if options.verbose > 3:
                         log.log("prescreen: recon\t= changed")
             else:
+                gtimer.start()
                 cost = smodule.compute_cost(gtree)
+                runtime_cost += gtimer.stop()
 
             # log
             if options.verbose >= 3:
@@ -625,7 +685,7 @@ def search_landscape(gtree, stree, gene2species, aln,
         # do a final reconroot
         gtimer.start()
         mintree, mincost = smodule.recon_root(mintree, newCopy=False, returnCost=True)
-        runtime_recon += gtimer.stop()
+        runtime_reconroot += gtimer.stop()
 
         treehash = phylo.hash_tree(unroot(mintree, newCopy=True))
 
@@ -680,7 +740,7 @@ def main():
     # global variables
     global options, seed
     global DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
-    global gtimer, runtime_prop, runtime_recon, runtime_stat
+    global gtimer, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
     global treehash0, usertree
    
     # parse arguments
@@ -690,6 +750,9 @@ def main():
     if options.usertreeext:
         global usertreehash, usertreehash_rooted, usertreehash_unrooted, \
                searched_user_rooted0, searched_user_unrooted0
+
+    # global timer
+    gtimer = timer.Timer()
 
     # import likelihood module
     if DEBUG_SKIP_LIK:
@@ -719,6 +782,7 @@ def main():
             outlog = util.open_stream(options.log, "w")
             log = timer.Timer(outlog)
 
+        log.log("TreeFix version: %s" % VERSION)
         log.log("TreeFix executed with the following arguments:")
         log.log("%s %s\n" % (os.path.basename(sys.argv[0]), 
                              ' '.join(map(lambda x: x if x.find(' ') == -1 else "\"%s\"" % x, 
@@ -752,14 +816,29 @@ def main():
 
         # read input tree
         gtrees = treelib.read_trees(treefile)
-        assert len(gtrees) == 1
+        if len(gtrees) != 1:
+            print >>sys.stderr, "ERROR: treefile contains multiple trees: %s" % treefile
+            return 1
         gtree = gtrees[0]
 
-        # special cases: small tree -- no need to search
-        if check_small_tree(gtree, rooted=rooted):
+        # runtime statistics
+        runtime_prop = 0
+        runtime_reconroot = 0
+        runtime_cost = 0
+        runtime_stat = 0
+
+        # special cases -- no need to search
+        #   small gene tree
+        #   input gene tree achieved minimum cost
+        if check_small_tree(gtree, rooted=rooted) or \
+           check_input_tree(gtree, stree, gene2species, smodule):
             # output tree
             gtree.write(out, oneline=False)
-            
+
+            # log
+            if options.verbose >= 1:
+                log.stop(); log.log("")
+
             # skip rest of algorithm
             continue
 
@@ -775,18 +854,12 @@ def main():
         aln = alignlib.fasta.read_fasta(alnfile)
         alnlen = len(aln.values()[0])
 
-        # runtime statistics
-        gtimer = timer.Timer()
-        runtime_prop = 0
-        runtime_recon = 0
-        runtime_stat = 0
-
-        # special case -- one-to-one mapping, check congruent gene tree
+        # special case: check for one-to-one mapping and if congruent gene tree achieves minimum cost
         flag, mintree = check_congruent_tree(gtree, stree, gene2species, aln,
                                              module, smodule)
         if flag:
             # output tree
-            mintree.write(outfile)
+            mintree.write(outfile, oneline=False)
             
             # log
             if options.verbose >= 1:
@@ -814,7 +887,9 @@ def main():
         treehash0_unrooted = phylo.hash_tree(unroot(gtree, newCopy=True))
         treehash0 = treehash0_rooted if rooted else treehash0_unrooted
         if usertree:
-            assert set(usertree.leaf_names()) == set(gtree.leaf_names())
+            if set(usertree.leaf_names()) != set(gtree.leaf_names()):
+                print >>sys.stderr, "ERROR: gene tree and user tree contain different genes"
+                return 1
             searched_user_rooted0 = treehash0_rooted == usertreehash_rooted
             searched_user_unrooted0 = treehash0_unrooted == usertreehash_unrooted
 
@@ -880,7 +955,8 @@ def main():
         # output runtime statistics
         if options.verbose >= 1:
             log.log("proposal runtime:\t%f" % runtime_prop)
-            log.log("reconroot runtime:\t%f" % runtime_recon)
+            log.log("reconroot runtime:\t%f" % runtime_reconroot)
+            log.log("cost runtime:\t%f" % runtime_cost)
             log.log("statistic runtime:\t%f" % runtime_stat)
 
         # stop log

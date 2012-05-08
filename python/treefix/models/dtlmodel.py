@@ -60,9 +60,11 @@ class DTLModel(CostModel):
         # write species tree and gene tree using species map
         treeout = util.open_stream(self.treefile, 'w')
         self.stree.write(treeout, oneline=True)
+        treeout.write('\n')
         edges = []
         for gtree, edge in self._reroot_helper(gtree, newCopy=newCopy, returnEdge=True):
             gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True)
+            treeout.write('\n')
             edges.append(edge)
         treeout.close()
 
@@ -80,11 +82,7 @@ class DTLModel(CostModel):
         i = 0
         n = len(edges)
         costs = [None]*n
-        while True:
-            line = proc.stdout.readline()
-            if line == '':
-                break
-            
+        for line in proc.stdout:
             toks = line.split(':')
             if toks[0] == "The minimum reconciliation cost is":
                 assert i < n
@@ -113,7 +111,9 @@ class DTLModel(CostModel):
         # write species tree and gene tree using species map
         treeout = util.open_stream(self.treefile, 'w')
         self.stree.write(treeout, oneline=True)
+        treeout.write('\n')
         gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True)
+        treeout.write('\n')
         treeout.close()
 
         # execute command
@@ -128,11 +128,7 @@ class DTLModel(CostModel):
                        
         # parse output
         cost = None
-        while True:
-            line = proc.stdout.readline()
-            if line == '':
-                break
-            
+        for line in proc.stdout.:
             toks = line.split(':')
             if toks[0] == "The minimum reconciliation cost is":
                 cost = int(toks[1])

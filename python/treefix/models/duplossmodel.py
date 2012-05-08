@@ -31,6 +31,15 @@ class DupLossModel(CostModel):
                           default=1.0, type="float",
                           help="loss cost (default: 1.0)")
         self.parser = parser
+
+    def optimize_model(self, gtree, stree, gene2species, extra):
+        """Optimizes the model"""
+        CostModel.optimize_model(self, gtree, stree, gene2species, extra)
+
+        if self.dupcost < 0:
+            self.parser.error("-D/--dupcost must be >= 0")
+        if self.losscost < 0:
+            self.parser.error("-L/--losscost must be >= 0")
         
     def recon_root(self, gtree, newCopy=True, returnCost=False):
         """Reroots the tree by minimizing the duplication/loss cost"""

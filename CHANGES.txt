@@ -1,6 +1,12 @@
 TreeFix Change Log
 -----------------------
 
+treefix-1.1.1 (2012/05/08)
+-----------------------
+- fixed major bug in p-value computation of previous release
+- added pre-processing step to check input gene tree
+
+
 treefix-1.1 (2012/02/29)
 -----------------------
 - added bootstrap analysis

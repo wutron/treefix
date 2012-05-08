@@ -35,7 +35,7 @@ class RAxMLModel(StatModel):
         parser.add_option("-e", "--eps", dest="eps",
                           metavar="<eps>",
                           default=2.0, type="float",
-                          help="model optimization precision in log likelihood units for final (default 2.0)")
+                          help="model optimization precision in log likelihood units (default 2.0)")
         self.parser = parser
 
     def __del__(self):
@@ -63,5 +63,6 @@ class RAxMLModel(StatModel):
         os.remove(seqfile)
         
     def compute_lik_test(self, gtree, stat="SH"):
-        """Computes the test statistic 'stat' using RAxML likelihoods"""
-        return self._raxml.compute_lik_test(gtree, stat, report="over")
+        """Computes the test statistic 'stat' using RAxML ikelihoods"""
+        # use report="under" to determine if gtree is statistically worse (i.e. LH{gtree} < LH{optimal})
+        return self._raxml.compute_lik_test(gtree, stat, report="both")

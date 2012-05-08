@@ -71,7 +71,6 @@ treefix_compute --type likelihood -m treefix.models.raxmlmodel.RAxMLModel --show
 
 # compute pval and Dlnl for true tree using RAxML tree to optimize
 treefix_compute --type likelihood -m treefix.models.raxmlmodel.RAxMLModel \
-    -s config/fungi.stree -S config/fungi.smap \
     -A .nt.align -U .nt.raxml.tree \
     sim-fungi/0/0.tree
 
@@ -89,6 +88,12 @@ treefix_compute --type cost -m treefix.models.duplossmodel.DupLossModel \
     -r -s config/fungi.stree -S config/fungi.smap \
     -o .nt.raxml.tree \
     sim-fungi/0/0.nt.raxml.tree
+
+# compute cost for true tree
+treefix_compute --type cost -m treefix.models.duplossmodel.DupLossModel \
+    -r -s config/fungi.stree -S config/fungi.smap \
+    -o .tree \
+    sim-fungi/0/0.tree
 
 # clean up
 rm sim-fungi/0/0.output
