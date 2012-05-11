@@ -1,13 +1,19 @@
 TreeFix Change Log
 -----------------------
 
+treefix-1.1.2 (2012/05/11)
+-----------------------
+- moved check congruent gene tree to pre-processing step in search (affects bootstraps)
+- added trivial bootstraps and fixed minor bug in output for special cases of small tree and input gene tree
+
+
 treefix-1.1.1 (2012/05/08)
 -----------------------
 - fixed major bug in p-value computation of previous release
 - added pre-processing step to check input gene tree
 
 
-treefix-1.1 (2012/02/29)
+treefix-1.1 (2012/03/26)
 -----------------------
 - added bootstrap analysis
 - removed caching

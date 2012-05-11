@@ -6,7 +6,7 @@
 # (2) computing the species tree aware cost (inherits treefix.models.CostModel).
 #
 
-VERSION = "1.1.1"
+VERSION = "1.1.2"
 
 # python libraries
 import os, sys, optparse
@@ -231,8 +231,8 @@ def log_tree(gtree, log, oneline=True, writeDists=False):
     else:
         if writeDists:
             treelib.draw_tree(gtree, out=treeout)
-	else:
-	    treelib.draw_tree(gtree, out=treeout, minlen=5, maxlen=5)
+        else:
+            treelib.draw_tree(gtree, out=treeout, minlen=5, maxlen=5)
         log.log("tree:\n %s\n" % treeout.getvalue())
     treeout.close()
 
@@ -270,7 +270,7 @@ def check_small_tree(gtree, rooted=False):
        (len(genes) == 3 and not rooted):
         # log
         if options.verbose >= 1:
-            log.log("tree size <= 2 or == 3 and unrooted -- search skipped")
+            log.log("tree size <= 2 or == 3 and unrooted -- search skipped\n")
             log.stop(); log.log("")
 
         # is small tree
@@ -301,17 +301,21 @@ def check_input_tree(gtree, stree, gene2species, smodule):
     smodule.optimize_model(gtree, stree, gene2species, options.sextra)
     if options.verbose >= 1: log.stop(); log.log("")
 
-    # find cost
-    gtimer.start()
-    cost = smodule.compute_cost(gtree)
-    runtime_cost += gtimer.stop()
+    # reroot (if desired) and log
+    if options.reroot:
+        gtimer.start()
+        gtree, cost = smodule.recon_root(gtree, newCopy=True, returnCost=True)
+        runtime_reconroot += gtimer.stop()
+    else:
+        gtimer.start()
+        cost = smodule.compute_cost(gtree)
+        runtime_cost += gtimer.stop()
 
     # input gene tree achieved minimum cost?
     if cost == smodule.mincost:
         # log
         if options.verbose >= 1:
-            log.log("input")
-            log.log("input: cost\t= %.6g" % cost)
+            log.log("input achieved minimum cost: cost\t= %.6g\n" % cost)
             log.stop(); log.log("")
 
         # input tree achieved minimum cost
@@ -323,7 +327,7 @@ def check_input_tree(gtree, stree, gene2species, smodule):
         
     return False
 
-def check_congruent_tree(gtree, stree, gene2species, aln,
+def check_congruent_tree(gtree, stree, gene2species,
                          module, smodule):
     """check the congruent gene tree"""
 
@@ -344,18 +348,16 @@ def check_congruent_tree(gtree, stree, gene2species, aln,
     if options.verbose >= 1:
         log.start("Checking congruent gene tree"); log.log("")
         
-    # initialize likelihood module
-    if options.verbose >= 1: log.start("Optimizing likelihood model")
-    module.optimize_model(gtree, aln, options.extra)
-    if options.verbose >= 1: log.stop(); log.log("")
-
-    # initialize cost module
-    if options.verbose >= 1: log.start("Optimizing cost model")
-    smodule.optimize_model(gtree, stree, gene2species, options.sextra)
-    if options.verbose >= 1: log.stop(); log.log("")
-
-    # make congruent gene tree and find cost
+    # make congruent gene tree
     mintree = phylo.stree2gtree(stree, genes, gene2species)
+    for node in mintree:
+        node.dist = 0
+        if "boot" in node.data:
+            del node.data["boot"]
+    if "boot" in mintree.default_data:
+        del gtree.default_data["boot"]
+
+    # find cost
     gtimer.start()
     cost = smodule.compute_cost(mintree)
     runtime_cost += gtimer.stop()
@@ -374,10 +376,6 @@ def check_congruent_tree(gtree, stree, gene2species, aln,
         else:
             reject = False
             
-            if options.nboot > 1:
-                # add bootstraps
-                phylo.add_bootstraps(mintree, [mintree], rooted=True)
-
         # log
         if options.verbose >= 1:
             log.log("congruent")
@@ -411,7 +409,7 @@ def check_congruent_tree(gtree, stree, gene2species, aln,
 
 def search_landscape(gtree, stree, gene2species, aln,
                      module, smodule, rooted,
-                     optimize=True, seednum=1):
+                     seednum=1):
     """search gene tree landscape"""
 
     # global variables
@@ -429,17 +427,16 @@ def search_landscape(gtree, stree, gene2species, aln,
     gtree = gtree.copy()
     tree0 = gtree.copy()
 
-    if optimize:
-        # optimize likelihood module
-        if not DEBUG_SKIP_LIK:
-            if options.verbose >= 1: log.start("Optimizing likelihood model")
-            module.optimize_model(gtree, aln, options.extra)
-            if options.verbose >= 1: log.stop(); log.log("")
-
-        # optimize cost module
-        if options.verbose >= 1: log.start("Optimizing cost model")
-        smodule.optimize_model(gtree, stree, gene2species, options.sextra)
+    # optimize likelihood module
+    if not DEBUG_SKIP_LIK:
+        if options.verbose >= 1: log.start("Optimizing likelihood model")
+        module.optimize_model(gtree, aln, options.extra)
         if options.verbose >= 1: log.stop(); log.log("")
+
+    # optimize cost module
+    if options.verbose >= 1: log.start("Optimizing cost model")
+    smodule.optimize_model(gtree, stree, gene2species, options.sextra)
+    if options.verbose >= 1: log.stop(); log.log("")
     
     # reroot initial tree (if desired) and log
     if options.reroot:
@@ -450,6 +447,14 @@ def search_landscape(gtree, stree, gene2species, aln,
         gtimer.start()
         cost0 = smodule.compute_cost(gtree)
         runtime_cost += gtimer.stop()
+    
+    # special case: check for one-to-one mapping and if congruent gene tree achieves minimum cost
+    flag, mintree = check_congruent_tree(gtree, stree, gene2species,
+                                         module, smodule)
+    if flag:
+        return mintree
+
+    # log
     if options.verbose >= 1:
         log.log("search: initial")
         log.log("search: cost\t= %.6g" % cost0)
@@ -729,7 +734,7 @@ def search_landscape(gtree, stree, gene2species, aln,
         log.log("")
 
     # return optimum
-    return mintree, mincost, minpval, minDlnl   
+    return mintree   
 
 #==========================================================
 # main
@@ -833,7 +838,11 @@ def main():
         if check_small_tree(gtree, rooted=rooted) or \
            check_input_tree(gtree, stree, gene2species, smodule):
             # output tree
-            gtree.write(out, oneline=False)
+            gtree.write(outfile, oneline=False)
+
+            # add bootstraps
+            if options.nboot > 1:
+                phylo.add_bootstraps(gtree, [gtree], rooted=True)
 
             # log
             if options.verbose >= 1:
@@ -853,20 +862,6 @@ def main():
         # read alignment
         aln = alignlib.fasta.read_fasta(alnfile)
         alnlen = len(aln.values()[0])
-
-        # special case: check for one-to-one mapping and if congruent gene tree achieves minimum cost
-        flag, mintree = check_congruent_tree(gtree, stree, gene2species, aln,
-                                             module, smodule)
-        if flag:
-            # output tree
-            mintree.write(outfile, oneline=False)
-            
-            # log
-            if options.verbose >= 1:
-                log.stop(); log.log("")
-
-            # skip rest of algorithm
-            continue
 
         # read user tree
         if options.usertreeext:
@@ -894,15 +889,15 @@ def main():
             searched_user_unrooted0 = treehash0_unrooted == usertreehash_unrooted
 
         # setup output
-	if options.nboot == 1:
-	    boot = False
+        if options.nboot == 1:
+            boot = False
         else:
-	    boot = True
+            boot = True
             boottreefile = util.replace_ext(treefile, options.oldext, options.boottreeext)
             out = util.open_stream(boottreefile, "w")
 
         # main algorithm
-        for bootnum in xrange(options.nboot):		# bootstrap search           
+        for bootnum in xrange(options.nboot):       # bootstrap search           
             # get bootstrapped alignment (equal number of columns, sample with replacement)
             if boot:
                 if options.verbose >= 1:
@@ -919,33 +914,35 @@ def main():
                 baln = aln
                     
             # search
-            mintree, mincost, minpval, minDlnl = \
-                     search_landscape(gtree, stree, gene2species, baln,
-                                      module, smodule, rooted,
-				      seednum=bootnum+boot+1)
-            
+            mintree = search_landscape(gtree, stree, gene2species, baln,
+                                       module, smodule, rooted,
+                                       seednum=bootnum+boot+1)
+
             # output bootstrap tree
             if boot:
                 mintree.write(out, oneline=True)
-		out.write('\n')
+                out.write('\n')
                 if options.verbose >= 1:
-                   log.stop(); log.log("")
+                    log.stop(); log.log("")
 
         # write optimal tree or get optimal tree with bootstrap support
-	if not boot:
-	    mintree.write(outfile)
+        if not boot:
+            mintree.write(outfile)
         else:
             out.close()
-	    if options.verbose >= 1:
+            if options.verbose >= 1:
                 log.start("boot: final"); log.log("")
-                    
+            
             # search
-            mintree, mincost, minpval, minDlnl = \
-                     search_landscape(gtree, stree, gene2species, aln,
-                                      module, smodule, rooted)
+            mintree = search_landscape(gtree, stree, gene2species, aln,
+                                       module, smodule, rooted)
 
             # add bootstraps
             phylo.add_bootstraps(mintree, treelib.iter_trees(boottreefile), rooted=True)
+
+            # log final tree with bootstraps
+            log_tree(mintree, log)
+            log_tree(mintree, log, oneline=False)
             
             # output tree
             mintree.write(outfile)
