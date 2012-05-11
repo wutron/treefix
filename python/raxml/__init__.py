@@ -13,7 +13,7 @@ from scipy.stats import norm
 # load rasmus libraries if available
 def load_deps(dirname="deps"):
     sys.path.append(os.path.realpath(
-                os.path.join(os.path.dirname(__file__), dirname)))
+        os.path.join(os.path.dirname(__file__), dirname)))
 
 # add pre-bundled dependencies to the python path,
 # if they are not available already
@@ -22,7 +22,7 @@ try:
 except ImportError:
     load_deps()
     import rasmus, compbio
-
+from rasmus import treelib
 
 #=============================================================================
 
@@ -33,10 +33,9 @@ class RAxML:
     # constructors/destructors
     
     def __init__(self):
-        self.rooted = False	# RAxML uses unrooted trees
-
+        self.rooted = False # RAxML uses unrooted trees
         self.adef = raxml.new_analdef()
-	raxml.init_adef(self.adef)
+        raxml.init_adef(self.adef)
         self.tr = raxml.new_tree()
         self.optimal = False
         self.best_LH = None; self.weight_sum = None; self.best_vector = None
@@ -72,12 +71,21 @@ class RAxML:
     
     def optimize_model(self, treefile, seqfile, extra="-m GTRGAMMA -n test"):
         """Optimizes the RAXML model"""
-        
+
+        # initialize parameters based on input
         cmd = "raxmlHPC -t %s -s %s %s" %\
               (treefile, seqfile, extra)
         raxml.init_program(self.adef, self.tr, cmd.split(' '))
 
+        # optimize
         raxml.optimize_model(self.adef, self.tr)
+
+        # reset best LH
+        if self.best_vector is not None:
+            raxml.delete_best_vector(self.best_vector)
+        self.best_vector, self.best_LH, self.weight_sum = raxml.compute_best_LH(self.tr)
+
+        # set flags
         self.optimal = True
 
     #=========================================    
@@ -104,14 +112,12 @@ class RAxML:
         if test == "SH":
             if not self.optimal:
                 raise Exception("The model is not optimized: call optimize_model.\n")
-            if self.best_LH is None:
-                self.best_vector, self.best_LH, self.weight_sum = raxml.compute_best_LH(self.tr)
-                
+
             self.read_tree(tree)
             zscore, Dlnl = raxml.compute_LH(self.adef, self.tr,
                                             self.best_LH, self.weight_sum, self.best_vector)
 
-            # really should just use pval = norm.sf(zscore) if one of the trees is the ML tree, 
+            # really should just use pval = norm.sf(zscore) if one of the trees is the ML tree,
             # but SH test compares two a priori trees (to determine if T_x and T_y
             # are equally good explanations of the data), so raxml uses two-sided test
             if report == "under":
