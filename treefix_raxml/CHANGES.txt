@@ -1,10 +1,16 @@
 RAxML Change Log
 -----------------------
 
-raxml-0.2 (2012/02/29)
+raxml-0.2.1 (2012/05/11)
+-----------------------
+- fixed bug where bestLH is not reset after optimize_model
+
+
+raxml-0.2 (2012/03/26)
 -----------------------
 - refactored code into class
 - changed p-value to one-sided and two-sided tests
+
 
 raxml-0.1 (2011/11/12)
 -----------------------
