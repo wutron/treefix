@@ -8,7 +8,8 @@ files = ["src",
          "setup.py",
          "README.txt",
 	 "INSTALL.txt",
-	 "LICENSE.txt"]
+	 "LICENSE.txt",
+	 "CHANGES.txt"]
 
 exclude = [".*\.pyc", ".*\.so",
 	   "python/raxml/raxml_wrap\.c",

@@ -1,6 +1,11 @@
 RAxML Change Log
 -----------------------
 
+raxml-0.2.2 (2012/06/26)
+-----------------------
+- added change log to package
+
+
 raxml-0.2.1 (2012/05/11)
 -----------------------
 - fixed bug where bestLH is not reset after optimize_model
