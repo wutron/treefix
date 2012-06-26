@@ -306,7 +306,7 @@ def find_species_roots(tree, stree, recon):
     return roots       
 
 
-def find_orthologs(gtree, stree, recon, events=None, counts=True):
+def find_orthologs(gtree, stree, recon, events=None, counts=True, species_branch=False):
     """Find all ortholog pairs within a gene tree"""
 
     if events is None:
@@ -329,15 +329,55 @@ def find_orthologs(gtree, stree, recon, events=None, counts=True):
                             else:
                                 g1, g2 = gene1, gene2
                                 a, b = i, j
-                            
-                            if not counts:
-                                orths.append((g1.name, g2.name))
-                            else:
-                                orths.append((g1.name, g2.name,
-                                              sp_counts[a][recon[g1]],
-                                              sp_counts[b][recon[g2]]))
+
+                            orth = [g1.name, g2.name]
+                            if counts:
+                                orth.extend([sp_counts[a][recon[g1]],
+                                             sp_counts[b][recon[g2]]])
+                            if species_branch:
+                                orth.append(recon[node])
+                            orths.append(tuple(orth))
     
     return orths
+
+
+def find_paralogs(gtree, stree, recon, events=None, counts=True, species_branch=False, split=True):
+    """Find all paralog pairs within a gene tree - same as find_orthologs but looks for event == "dup"."""
+
+    if events is None:
+        events = label_events(gtree, recon)
+    paralogs = []
+    
+    for node, event in events.items():
+        if event == "dup":            
+            # ignore pre-root duplications
+            if split and recon[node] == stree.root:
+                continue
+            
+            leavesmat = [x.leaves() for x in node.children]
+            sp_counts = [util.hist_dict(util.mget(recon, row))
+                         for row in leavesmat]
+            
+            for i in range(len(leavesmat)):
+                for j in range(i+1, len(leavesmat)):
+                    for gene1 in leavesmat[i]:
+                        for gene2 in leavesmat[j]:
+                            if gene1.name > gene2.name:
+                                g1, g2 = gene2, gene1
+                                a, b = j, i
+                            else:
+                                g1, g2 = gene1, gene2
+                                a, b = i, j
+                            
+                            paralog = [g1.name, g2.name]
+                            if counts:
+                                paralog.extend([sp_counts[a][recon[g1]],
+                                                sp_counts[b][recon[g2]]])
+                            if species_branch:
+                                paralog.append(recon[node])
+                            paralogs.append(tuple(paralog))
+    
+    return paralogs
 
 
 
@@ -575,7 +615,17 @@ def recon_root(gtree, stree, gene2species = gene2species,
         gtree = gtree.copy()
         
     if len(gtree.leaves()) == 2:
-        return
+        if returnCost:
+            recon = reconcile(gtree, stree, gene2species)
+            events = label_events(gtree, recon)
+            cost = 0
+            if rootby in ["dup", "duploss"] and dupcost != 0:
+                cost += count_dup(gtree, events) * dupcost
+            if rootby in ["loss", "duploss"] and losscost != 0:
+                cost += count_loss(gtree, stree,  recon) * losscost
+            return gtree, cost
+        else:
+            return gtree
 
     if keepName:
         oldroot = gtree.root.name

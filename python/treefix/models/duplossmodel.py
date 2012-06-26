@@ -17,8 +17,11 @@ from compbio import phylo
 class DupLossModel(CostModel):
     """Computes Dup/Loss costs"""
     
-    def __init__(self):
+    def __init__(self, extra):
         """Initializes the model"""
+        CostModel.__init__(self, extra)
+
+        self.VERSION = "1.0.0"
         self.mincost = 0
 
         parser = optparse.OptionParser(prog="DupLossModel")
@@ -32,9 +35,11 @@ class DupLossModel(CostModel):
                           help="loss cost (default: 1.0)")
         self.parser = parser
 
-    def optimize_model(self, gtree, stree, gene2species, extra):
+        CostModel._parse_args(self, extra)
+
+    def optimize_model(self, gtree, stree, gene2species):
         """Optimizes the model"""
-        CostModel.optimize_model(self, gtree, stree, gene2species, extra)
+        CostModel.optimize_model(self, gtree, stree, gene2species)
 
         if self.dupcost < 0:
             self.parser.error("-D/--dupcost must be >= 0")

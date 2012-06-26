@@ -22,8 +22,11 @@ from compbio import phylip
 class RAxMLModel(StatModel):
     """Computes test statistics using RAxML site-wise likelihoods"""
     
-    def __init__(self):
+    def __init__(self, extra):
         """Initializes the RAxML model"""
+        StatModel.__init__(self, extra)
+
+        self.VERSION = "0.2.1"
         self._raxml = raxml.RAxML()
         self.rooted = self._raxml.rooted
 
@@ -38,13 +41,15 @@ class RAxMLModel(StatModel):
                           help="model optimization precision in log likelihood units (default 2.0)")
         self.parser = parser
 
+        StatModel._parse_args(self, extra)
+
     def __del__(self):
         """Cleans up the RAxML model"""
         del self._raxml
 
-    def optimize_model(self, gtree, aln, extra):
+    def optimize_model(self, gtree, aln):
         """Optimizes the RAxML model"""
-        StatModel.optimize_model(self, gtree, aln, extra)
+        StatModel.optimize_model(self, gtree, aln)
         
         fd, treefile = util.temporaryfile.mkstemp('.tree')
         os.close(fd)
@@ -57,7 +62,7 @@ class RAxMLModel(StatModel):
         out.close()
         
         self._raxml.optimize_model(treefile, seqfile,
-                                   "-m %s -n test" % self.model)
+                                   "-m %s -e %s -n test" % (self.model, self.eps))
 
         os.remove(treefile)
         os.remove(seqfile)

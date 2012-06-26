@@ -1,6 +1,14 @@
 TreeFix Change Log
 -----------------------
 
+treefix-1.1.3 (2012/06/26)
+-----------------------
+- added versions to models
+- fixed minor error in raxmlmodel not passing --eps
+- moved processing of --extra parameter in models to constructor (from optimize_model)
+- added change log to package
+
+
 treefix-1.1.2 (2012/05/11)
 -----------------------
 - moved check congruent gene tree to pre-processing step in search (affects bootstraps)
@@ -15,6 +23,7 @@ treefix-1.1.1 (2012/05/08)
 
 treefix-1.1 (2012/03/26)
 -----------------------
+- THIS VERSION INCLUDES A MAJOR BUG AND SHOULD NOT BE USED!
 - added bootstrap analysis
 - removed caching
 - added pre-processing step to check congruent gene tree

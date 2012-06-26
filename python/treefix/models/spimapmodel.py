@@ -21,8 +21,11 @@ from compbio import phylo, fasta, alignlib
 class SpimapModel(CostModel):
     """Computes SPIMAP costs"""
    
-    def __init__(self):
+    def __init__(self, extra):
         """Initializes the model"""
+        CostModel.__init__(self, extra)
+
+        self.VERSION = "0.1.0"
         self.mincost = -util.INF
        
         parser = optparse.OptionParser(prog="SpimapModel")
@@ -63,10 +66,12 @@ class SpimapModel(CostModel):
         parser.add_option_group(grp_duploss)
                 
         self.parser = parser
+
+        CostModel._parse_args(self, extra)
     
-    def optimize_model(self, gtree, stree, gene2species, extra):
+    def optimize_model(self, gtree, stree, gene2species):
         """Optimizes the model"""
-        CostModel.optimize_model(self, gtree, stree, gene2species, extra)
+        CostModel.optimize_model(self, gtree, stree, gene2species)
         
         #=============================
         # read sequences

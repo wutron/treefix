@@ -6,26 +6,20 @@ import optparse, sys
 from rasmus import treelib, util
 from compbio import phylo
 
-class StatModel(object):
-    def __init__(self):
-        """Initializes the model"""
-        self.rooted = True
-        self.parser = None
-
+class Model(object):
+    def __init__(self, extra):
+        self.VERSION = "-"
+    
     def __del__(self):
         """Cleans up the model"""
-        pass
 
     def print_help(self, file=sys.stdout):
         """Print help"""
         if self.parser:
             self.parser.print_help(file)
 
-    def optimize_model(self, gtree, aln, extra):
-        """
-        Optimizes the underlying model in the module given the tree, seq (alignment),
-        and extra parameter arguments.
-        """
+    def _parse_args(self, extra):
+        """Parses the extra parameter arguments"""
         if self.parser is None:
             if extra is not None:
                 raise Exception("--extra parameters not allowed if no parser defined")
@@ -36,6 +30,19 @@ class StatModel(object):
             for k, v in vars(options).iteritems():
                 setattr(self, k, v)
 
+
+class StatModel(Model):
+    def __init__(self, extra):
+        """Initializes the model"""
+        Model.__init__(self, extra)
+
+        self.rooted = True
+        self.parser = None
+
+    def optimize_model(self, gtree, aln):
+        """Optimizes the underlying model in the module given the tree and seq (alignment)"""
+        pass
+
     def compute_lik_test(self, gtree, stat):
         """
         Computes the test statistic for tree likelihood equivalence.
@@ -44,38 +51,18 @@ class StatModel(object):
         raise
        
 
-class CostModel(object):
-    def __init__(self):
+class CostModel(Model):
+    def __init__(self, extra):
         """Initializes the model"""
+        Model.__init__(self, extra)
+        
         self.mincost = -util.INF
         self.parser = None
-
-    def __del__(self):
-        """Cleans up the model"""
-        pass
-
-    def print_help(self, file=sys.stdout):
-        """Print help"""
-        if self.parser:
-            self.parser.print_help(file)
     
-    def optimize_model(self, gtree, stree, gene2species, extra):
-        """
-        Optimizes the underlying model in the module given the tree
-        and extra parameter arguments.
-        """
+    def optimize_model(self, gtree, stree, gene2species):
+        """Optimizes the underlying model in the module given the tree"""
         self.stree = stree
         self.gene2species = gene2species
-
-        if self.parser is None:
-            if extra is not None:
-                raise Exception("--extra parameter not allowed if no parser defined")
-        else:
-            options, args = self.parser.parse_args(extra.split() if extra is not None else [])
-            if len(args) != 0:
-                raise Exception("no arguments allowed")
-            for k, v in vars(options).iteritems():
-                setattr(self, k, v)
 
     def _reroot_helper(self, gtree, newCopy=True, returnEdge=False):
         """

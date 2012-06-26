@@ -79,7 +79,7 @@ def get_module(mname):
     folder = '.'.join(mname.split('.')[:-1])
     if folder != '':
         exec "import %s" % folder
-    module = eval("%s()" % mname)
+    module = eval("%s(options.extra)" % mname)
     return module
 
 #=============================
@@ -100,6 +100,11 @@ if options.show_help:
     module.print_help()
     sys.exit(0)
 
+# required options for cost
+if options.type == "cost":
+    if (not options.stree) or (not options.smap):
+        parser.error("--stree and --smap are required")
+
 # determine input files
 treefiles = common.get_input_files(parser, options, args)
 if len(treefiles) == 0:
@@ -111,6 +116,10 @@ if len(treefiles) == 0:
 # import module
 module = get_module(options.module)
 
+# print version
+print "Model version: %s" % module.VERSION
+
+# get species tree and species map
 if options.type == "cost":
     # read species tree and species map
     stree = treelib.read_tree(options.stree)
@@ -137,10 +146,10 @@ for treefile in treefiles:
 
     if options.type == "likelihood":
         # optimize model
-        module.optimize_model(usertree, aln, options.extra)
+        module.optimize_model(usertree, aln)
     elif options.type == "cost":
         # optimize model
-        module.optimize_model(usertree, stree, gene2species, options.extra)
+        module.optimize_model(usertree, stree, gene2species)
 
     # iterate through trees
     for gtree in gtrees:

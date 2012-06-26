@@ -7,7 +7,8 @@ files = ["python",
          "setup.py",
          "README.txt",
 	 "INSTALL.txt",
-	 "LICENSE.txt"]
+	 "LICENSE.txt",
+	 "CHANGES.txt"]
 
 exclude = ["examples/getexample\.sh", "examples/testmodels\.sh",
            ".*\.linux", ".*\.pyc",

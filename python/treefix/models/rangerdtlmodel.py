@@ -1,5 +1,6 @@
 #
 # Python module for DTL cost
+# Adapted from treefix/python/treefix/models/dtlmodel.py
 #
 
 # treefix libraries
@@ -8,6 +9,7 @@ from treefix.models import CostModel
 # python libraries
 import optparse
 import os, sys, subprocess
+import re
 
 # rasmus libraries
 from rasmus import treelib, util
@@ -15,8 +17,11 @@ from rasmus import treelib, util
 #=============================================================================
 # command
 
-cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
-                   'DTL.linux')
+##cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
+##                   "ranger-dtl-U.linux")
+cmd = "ranger-dtl-U.linux"
+
+patt = "The minimum reconciliation cost is: (?P<cost>\d+) \(Duplications: (?P<D>\d+), Transfers: (?P<T>\d+), Losses: (?P<L>\d+)\)"
 
 #============================================================================
 
@@ -58,19 +63,28 @@ class DTLModel(CostModel):
 
     def recon_root(self, gtree, newCopy=True, returnCost=False):
         """
-        Returns the rerooted tree with min DTL cost
-        Generalizes compute_cost to multiple trees.
+        Returns input gene tree and min DTL cost.
+
+        Note: The optimally rooted gene tree from ranger-dtl-U
+              contains species names, so this function does NOT reroot.
+              It simply delegates to compute_cost.
         """
+
+        if returnCost:
+            mincost = self.compute_cost(gtree)
+            return gtree, mincost
+        else:
+            return gtree
+
+    def compute_cost(self, gtree):   
+        """Returns the DTL cost"""
 
         # write species tree and gene tree using species map
         treeout = util.open_stream(self.treefile, 'w')
-        self.stree.write(treeout, oneline=True)
-        treeout.write('\n')
-        edges = []
-        for gtree, edge in self._reroot_helper(gtree, newCopy=newCopy, returnEdge=True):
-            gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True)
-            treeout.write('\n')
-            edges.append(edge)
+        self.stree.write(treeout, oneline=True, writeData=lambda x: "")
+        treeout.write("\n[&U]")
+        gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True, writeData=lambda x: "")
+        treeout.write("\n")
         treeout.close()
 
         # execute command
@@ -84,59 +98,11 @@ class DTLModel(CostModel):
                                 universal_newlines=True)
         
         # parse output
-        i = 0
-        n = len(edges)
-        costs = [None]*n
-        for line in proc.stdout:
-            toks = line.split(':')
-            if toks[0] == "The minimum reconciliation cost is":
-                assert i < n
-                costs[i] = int(toks[1])
-                i += 1
-        assert all(map(lambda x: x is not None, costs))
-
-        # find minimum cost tree    
-        ndx, mincost = min(enumerate(costs), key=lambda it:it[1])
-        minroot = edges[ndx]
-        if edge != minroot:
-            node1, node2 = minroot
-            if node1.parent != node2:
-                node1, node2 = node2, node1
-            assert node1.parent == node2
-            treelib.reroot(gtree, node1.name, newCopy=False, keepName=True)
-
-        if returnCost:
-            return gtree, mincost
-        else:
-            return gtree
-
-    def compute_cost(self, gtree):   
-        """Returns the DTL cost"""
-
-        # write species tree and gene tree using species map
-        treeout = util.open_stream(self.treefile, 'w')
-        self.stree.write(treeout, oneline=True)
-        treeout.write('\n')
-        gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True)
-        treeout.write('\n')
-        treeout.close()
-
-        # execute command
-        proc = subprocess.Popen([cmd,
-                                 '-i', self.treefile,
-                                 '-D', str(self.dupcost),
-                                 '-T', str(self.transfercost),
-                                 '-L', str(self.losscost)],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                universal_newlines=True)       
-                       
-        # parse output
         cost = None
-        for line in proc.stdout.:
-            toks = line.split(':')
-            if toks[0] == "The minimum reconciliation cost is":
-                cost = int(toks[1])
+        for line in proc.stdout:
+            m = re.match(patt, line)
+            if m:
+                cost = int(m.group("cost"))
                 break
         assert cost is not None
         

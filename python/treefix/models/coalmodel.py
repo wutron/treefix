@@ -23,10 +23,14 @@ cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
 class CoalModel(CostModel):
     """Computes deep coalescence costs"""
     
-    def __init__(self):
+    def __init__(self, extra):
         """Initializes the model"""
+        CostModel.__init__(self, extra)
+
+        self.VERSION = "0.1.0"
         self.mincost = 0
-        self.parser = None
+
+        CostModel._parse_args(self, extra)
         
         # make temporary file
         fd, self.treefile = util.temporaryfile.mkstemp()
