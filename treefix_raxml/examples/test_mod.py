@@ -4,13 +4,13 @@
 import os,sys
 import optparse
 
-# raxml library
+# treefix_raxml library
 try:
-    import raxml
+    import treefix_raxml as raxml
 except:
     from os.path import realpath, dirname, join
     sys.path.append(join(realpath(dirname(dirname(__file__))), "python"))
-    import raxml
+    import treefix_raxml as raxml
 
 # rasmus and compbio libraries
 from rasmus import treelib, util

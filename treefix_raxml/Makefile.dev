@@ -31,19 +31,19 @@ all: includepy
 
 # copy subset of python modules for packaging with treefix
 includepy: versions
-	mkdir -p python/raxml/deps/rasmus
+	mkdir -p python/treefix_raxml/deps/rasmus
 	for mod in $(RASMUS_SRC_FILES); do \
-		cp $(PY_SRC_PATH)/rasmus/$${mod}.py python/raxml/deps/rasmus/$${mod}.py; \
+		cp $(PY_SRC_PATH)/rasmus/$${mod}.py python/treefix_raxml/deps/rasmus/$${mod}.py; \
 	done
 
-	mkdir -p python/raxml/deps/rasmus/ply
+	mkdir -p python/treefix_raxml/deps/rasmus/ply
 	for mod in $(RASMUS_PLY_FILES); do \
-	 	cp $(PY_SRC_PATH)/rasmus/ply/$${mod} python/raxml/deps/rasmus/ply/$${mod}; \
+	 	cp $(PY_SRC_PATH)/rasmus/ply/$${mod} python/treefix_raxml/deps/rasmus/ply/$${mod}; \
 	done
 
-	mkdir -p python/raxml/deps/compbio
+	mkdir -p python/treefix_raxml/deps/compbio
 	for mod in $(COMPBIO_SRC_FILES); do \
-		cp $(PY_SRC_PATH)/compbio/$${mod}.py python/raxml/deps/compbio/$${mod}.py; \
+		cp $(PY_SRC_PATH)/compbio/$${mod}.py python/treefix_raxml/deps/compbio/$${mod}.py; \
 	done
 
 # copy versions
@@ -59,6 +59,6 @@ versions:
 # clean
 clean:
 	rm versions.txt
-	rm python/raxml/*.pyc
-	rm -r python/raxml/deps
+	rm python/treefix_raxml/*.pyc
+	rm -r python/treefix_raxml/deps
 

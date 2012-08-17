@@ -1,11 +1,11 @@
-PyRAxML (Python Wrapper for RAxML)
+TreeFix-RAxML (Python Wrapper for RAxML for use with TreeFix)
 http://compbio.mit.edu/treefix/index.html#raxml
 Yi-Chieh Wu
 
 =============================================================================
 DEPENDENCIES
 
-PyRAxML has the following requirements:
+TreeFix-RAxML has the following requirements:
 
 - GCC compiler (4.1.2) -- http://gcc.gnu.org/
 - Python (2.5.4) -- http://python.org/
@@ -16,26 +16,20 @@ PyRAxML has the following requirements:
 =============================================================================
 INSTALL
 
-1) Build the wrapper using SWIG
+Build and install the Python module
 
-  cd python/raxml
-  swig -python raxml.i
-  cd ../../
+python setup.py build
+python setup.py install
 
-2) Build and install the Python module
+If you don't have permission to install software on your system, you can install
+into another directory using the --prefix or --home flags to setup.py.
 
-  python setup.py build
-  python setup.py install
-
-  If you don't have permission to install software on your system, you can install
-  into another directory using the --prefix or --home flags to setup.py.
-
-  For example
-  ::
-  python setup.py install --prefix=/home/username/python
-  or
-  python setup.py install --home=~
-  ::
+For example
+::
+python setup.py install --prefix=/home/username/python
+or
+python setup.py install --home=~
+::
 
 If you didn't install in the standard Python site-packages directory
 you will need to set your PYTHONPATH variable to the alternate location.

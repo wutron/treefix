@@ -13,33 +13,33 @@ mkdir -p lib
 gcc -o lib/raxml.so -shared src/*.o `gsl-config --libs`
 
 #=============================================================================
-# build source (developmental build)
+# build swig library by itself
+# (not necessary since now included in setup.py script)
 
-cd python/raxml
+cd python/treefix_raxml
 swig -python raxml.i
 cd ../../
 
+#=============================================================================
+# build source (developmental build)
+
 python setup.py build_ext --inplace
 
-export PYTHONPATH=$PYTHONPATH:~/projects/raxml/python
+export PYTHONPATH=$PYTHONPATH:~/projects/treefix_raxml/python
 
 #=============================================================================
 # build source
 
-cd python/raxml
-swig -python raxml.i
-cd ../../
-
 python setup.py build
-python setup.py install #--prefix=~/projects/raxml/sw
+python setup.py install #--prefix=<prefix>
 
 #=============================================================================
 # cleanup
 
-rm python/raxml/raxml_wrap.c
-rm python/raxml/raxml.py
-rm python/raxml/*.pyc
-rm python/_raxml.so
+rm python/treefix_raxml/raxml_wrap.c
+rm python/treefix_raxml/raxml.py
+rm python/treefix_raxml/*.pyc
+rm python/treefix_raxml/_raxml.so
 rm -r build
 
 #=============================================================================

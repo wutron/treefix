@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
 # this program is deprecated - use test_mod.py instead
-# to use this program, you must replace __init__.py with raxml.py
 
 # python libraries
 import os,sys
 import optparse
 
 # raxml library
-from raxml import raxml
+from treefix_raxml import raxml
 
 # scipy library
 from scipy.stats import norm

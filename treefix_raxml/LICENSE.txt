@@ -1,9 +1,10 @@
-PyRAxML, a Python wrapper for RAxML
+TreeFix-RAxML, a Python wrapper for RAxML
 Copyright (C) 2011 by Yi-Chieh Wu
 
 and
 
-modified source code for RAxML, originally by Alexandros Stamatakis.
+Original RAxML source code (C) by Alexandros Stamatakis.
+Modified RAxML source code (C) 2011 by Yi-Chieh Wu
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

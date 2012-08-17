@@ -1,16 +1,12 @@
 #!/bin/sh python
 #
-# This is an example of how to use PyRAxML to compute the SH statistic.
+# This is an example of how to use TreeFix-RAxML to compute the SH statistic.
 #
 
 # Make sure tools are compiled and installed before running the commands in 
 # this tutorial.  See INSTALL.txt for more information.
 
 # Or you can run from the source directory:
-
-cd ../python/raxml
-swig -python raxml.i
-cd ../../
 
 python setup.py build_ext --inplace
 
