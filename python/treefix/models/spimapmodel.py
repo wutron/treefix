@@ -111,7 +111,7 @@ class SpimapModel(CostModel):
 
             for k in util.frange(minkappa, maxkappa, stepkappa):
                 l = spidir.find_ml_branch_lengths_hky(gtree, self.align, self.bgfreq, k, maxiter=1,
-                                                      parsinit=True if k == minkappa else False)
+                                                      parsinit=(k == minkappa))
                 if l > maxlk:
                     maxlk = l
                     maxk = k

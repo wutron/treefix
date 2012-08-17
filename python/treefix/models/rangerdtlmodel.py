@@ -10,6 +10,7 @@ from treefix.models import CostModel
 import optparse
 import os, sys, subprocess
 import re
+import tempfile
 
 # rasmus libraries
 from rasmus import treelib, util
@@ -53,7 +54,7 @@ class DTLModel(CostModel):
         CostModel._parse_args(self, extra)
 
         # make temporary file
-        fd, self.treefile = util.temporaryfile.mkstemp()
+        fd, self.treefile = tempfile.mkstemp()
         os.close(fd)
 
     def __del__(self):
@@ -83,7 +84,8 @@ class DTLModel(CostModel):
         treeout = util.open_stream(self.treefile, 'w')
         self.stree.write(treeout, oneline=True, writeData=lambda x: "")
         treeout.write("\n[&U]")
-        gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True, writeData=lambda x: "")
+        gtree.write(treeout, namefunc=lambda name: self.gene2species(name),
+                    oneline=True, writeData=lambda x: "")
         treeout.write("\n")
         treeout.close()
 

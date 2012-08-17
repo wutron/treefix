@@ -8,7 +8,7 @@
 
 from distutils.core import setup, Extension
 
-VERSION = '1.0'
+VERSION = '1.1.4'
 
 setup(
     name='treefix',
@@ -35,10 +35,11 @@ setup(
     
     package_dir = {'': 'python'},
     packages=['treefix',
+              'treefix.models',
               'treefix.deps.rasmus', 'treefix.deps.rasmus.ply', 
               'treefix.deps.compbio'],
     py_modules=[],
-    scripts=['bin/treefix'],
+    scripts=['bin/treefix', 'bin/treefix_compute'],
     #ext_modules=[
     #    Extension(
     #        '', 

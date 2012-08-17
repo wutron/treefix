@@ -10,7 +10,7 @@ the species tree.
 
 TreeFix citation: 
 Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed 
-gene tree error correction using species trees. In prep.
+gene tree error correction using species trees. Systematic Biology. Accepted.
 
 Additionally, please cite the respective paper corresponding to the module
 you use for computing the test statistic for likelihood equivalence.

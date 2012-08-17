@@ -6,12 +6,13 @@
 # treefix libraries
 from treefix.models import StatModel
 
-# raxml library
-import raxml
+# treefix_raxml library
+import treefix_raxml as raxml
 
 # python libraries
 import os, sys
 import optparse
+import tempfile
 
 # rasmus libraries
 from rasmus import util
@@ -26,7 +27,7 @@ class RAxMLModel(StatModel):
         """Initializes the RAxML model"""
         StatModel.__init__(self, extra)
 
-        self.VERSION = "0.2.1"
+        self.VERSION = "0.2.3"
         self._raxml = raxml.RAxML()
         self.rooted = self._raxml.rooted
 
@@ -51,11 +52,11 @@ class RAxMLModel(StatModel):
         """Optimizes the RAxML model"""
         StatModel.optimize_model(self, gtree, aln)
         
-        fd, treefile = util.temporaryfile.mkstemp('.tree')
+        fd, treefile = tempfile.mkstemp('.tree')
         os.close(fd)
         gtree.write(treefile)
 
-        fd, seqfile = util.temporaryfile.mkstemp('.align')
+        fd, seqfile = tempfile.mkstemp('.align')
         os.close(fd)
         out = util.open_stream(seqfile, "w")
         phylip.write_phylip_align(out, aln, strip_names=False)

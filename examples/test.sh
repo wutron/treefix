@@ -47,7 +47,7 @@ treefix \
     -o .nt.raxml.tree \
     -n .nt.raxml.treefix.tree \
     -U .tree \
-    -V2 -l sim-fungi/0/0.nt.raxml.treefix.log \
+    -V1 -l sim-fungi/0/0.nt.raxml.treefix.log \
     sim-fungi/0/0.nt.raxml.tree
 
 #=============================================================================

@@ -1,5 +1,5 @@
 #
-# Python module for duploss cost
+# Python module for statistical models and reconciliation costs
 #
 
 import optparse, sys

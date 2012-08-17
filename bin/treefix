@@ -171,9 +171,9 @@ def parse_args():
         parser.error("--debug must be in {0,...,7}: %d" % options.debug)
     global debug, DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
     debug = bin(options.debug)[2:].zfill(3)
-    DEBUG_SKIP_LIK = True if debug[-1] == "1" else False
-    DEBUG_SKIP_COST = True if debug[-2] == "1" else False
-    DEBUG_COMPUTE_ALL_LIK = True if debug[-3] == "1" else False
+    DEBUG_SKIP_LIK = (debug[-1] == "1")
+    DEBUG_SKIP_COST = (debug[-2] == "1")
+    DEBUG_COMPUTE_ALL_LIK = (debug[-3] == "1")
     if DEBUG_SKIP_LIK and DEBUG_COMPUTE_ALL_LIK:
         parser.error("cannot set debug flag 4 and 1: %d" % options.debug)
 

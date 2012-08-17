@@ -8,6 +8,7 @@ from treefix.models import CostModel
 # python libraries
 import os, sys, subprocess
 import re
+import tempfile
 
 # rasmus libraries
 from rasmus import treelib, util
@@ -33,7 +34,7 @@ class CoalModel(CostModel):
         CostModel._parse_args(self, extra)
         
         # make temporary file
-        fd, self.treefile = util.temporaryfile.mkstemp()
+        fd, self.treefile = tempfile.mkstemp()
         os.close(fd)
 
     def __del__(self):

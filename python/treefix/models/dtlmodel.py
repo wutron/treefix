@@ -8,6 +8,7 @@ from treefix.models import CostModel
 # python libraries
 import optparse
 import os, sys, subprocess
+import tempfile
 
 # rasmus libraries
 from rasmus import treelib, util
@@ -48,7 +49,7 @@ class DTLModel(CostModel):
         CostModel._parse_args(self, extra)
 
         # make temporary file
-        fd, self.treefile = util.temporaryfile.mkstemp()
+        fd, self.treefile = tempfile.mkstemp()
         os.close(fd)
 
     def __del__(self):
