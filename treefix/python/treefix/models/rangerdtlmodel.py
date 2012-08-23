@@ -1,6 +1,5 @@
 #
-# Python module for DTL cost
-# Adapted from treefix/python/treefix/models/dtlmodel.py
+# Python module for rangerDTL cost
 #
 
 # treefix libraries

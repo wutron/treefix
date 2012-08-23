@@ -1,39 +1,39 @@
-TreeFix
-http://compbio.mit.edu/treefix/
-Yi-Chieh Wu, with libraries contributed from Matthew Rasmussen
+TreeFixDTL
+http://compbio.mit.edu/treefixDTL/
+Yi-Chieh Wu,
+with libraries contributed by Matthew Rasmussen
+and executables contributed by Mukul Bansal
 
 =============================================================================
 ABOUT
 
-TreeFix is a phylogenetic program that improves existing gene trees using
+TreeFixDTL is a phylogenetic program that improves existing gene trees using
 the species tree.
 
-TreeFix citation: 
-Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed 
-gene tree error correction using species trees. Systematic Biology. Accepted.
+TreeFixDTL citation: 
+Bansal*, Wu*, Alm, Kellis. TreeFixDTL. In prep.
 
 Additionally, please cite the respective paper corresponding to the module
 you use for computing the test statistic for likelihood equivalence.
 (See the README.txt files within their respective packages.)
 
-This package includes the Python source code of the TreeFix program
+This package includes the Python source code of the TreeFixDTL program
+(including the TreeFix program and TreeFixDTL wrapper),
+the ranger-dtl-U executable for Linux,
 as well as several library interfaces for python.
 
 
 =============================================================================
 USAGE
 
-Running treefix with no arguments will print out its command-line usage:
+Running treefixDTL with no arguments will print out its command-line usage:
 
-Usage: treefix [options] <gene tree> ...
+Usage: treefixDTL [options] <gene tree> ...
 
 Options:
-  --version             show program's version number and exit
-
   Input/Output:
     -i <input file>, --input=<input file>
                         list of input files, one per line
-    -r, --reroot        set to reroot the input tree
     -s <species tree>, --stree=<species tree>
                         species tree file in newick format
     -S <species map>, --smap=<species map>
@@ -65,57 +65,40 @@ Options:
   Species Tree Cost Model:
     -M <module for species tree aware cost calculations>, --smodule=<module for species tree aware cost calculations>
                         module for species tree aware cost calculations
-                        (default: "treefix.models.duplossmodel.DupLossModel")
+                        (default: "treefix.models.rangerdtlmodel.DTLModel")
     -E <extra arguments to module>, --sextra=<extra arguments to module>
                         extra arguments to pass to program
 
   Search Options:
     --seed=<seed>       seed value for random generator
     --niter=<# iterations>
-                        number of iterations (default: 100)
+                        number of iterations (default: 1000)
     --nquickiter=<# quick iterations>
-                        number of subproposals (default: 50)
-    --freconroot=<fraction reconroot>
-                        fraction of search proposals to reconroot (default:
-                        0.05)
+                        number of subproposals (default: 100)
 
   Information:
+    --version           show program's version number and exit
+    -h, --help          show this help message and exit    
     -V <verbosity level>, --verbose=<verbosity level>
                         verbosity level (0=quiet, 1=low, 2=medium, 3=high)
     -l <log file>, --log=<log file>
                         log filename.  Use '-' to display on stdout.
-    -h, --help          show this help message and exit
-
-  Debug:
-    --cached            set to cache likelihoods and costs
-    --debug=<debug mode>
-                        debug mode (octal: 0=normal, 1=skips likelihood test,
-                        2=skips cost filtering on pool, 4=computes likelihood
-                        for all trees in pool)
-
-#=============================================================================
-# Likelihood Test and Species Tree Aware Cost Functions
-
-TreeFix requires python modules for
-
-(1) testing likelihood equivalence
-    This should inherit treefix.models.StatModel.
-    See treefix.models.raxmlmodel.RAxMLModel for an example using the
-    SH test statistic with RAxML sitewise likelihoods.
-
-    Any program (e.g. CONSEL) may be used for the actual computation.
-    We have provided a module that uses RAxML
-    (requires a python wrapper around RAxML, available at
-    http://compbio.mit.edu/treefix/index.html#raxml).
-
-(2) computing the species tree aware cost
-    This should inherit treefix.models.CostModel.
-    See treefix.models.duplossmodel.DupLossModel for an example using
-    the duplication/loss cost.
-
-We have also provided a helper function (treefix_compute) for testing these modules.
 
 #=============================================================================
 # Examples
 
-See examples/test.sh for an example of how to use TreeFix.
+See examples/test.sh for an example of how to use TreeFixDTL.
+
+#=============================================================================
+# Miscellaneous
+
+TreeFixDTL is a simple wrapper around the TreeFix program that uses the 
+ranger-dtl-U reconciliation model to determine the species tree aware cost.
+It has different default options to deal with prokaryotic species and 
+removes some functionality from TreeFix that are incompatible with the
+ranger-dtl-U reconciliation model.  For more details on the underlying programs,
+see
+
+TreeFix    -- http://compbio.mit.edu/treefix/
+RANGER-DTL -- http://compbio.mit.edu/ranger-dtl/
+
