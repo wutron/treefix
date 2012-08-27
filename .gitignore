@@ -2,4 +2,8 @@
 .#*
 *.pyc
 *.pyo
+*.o
+*.so
 build
+python/treefix_raxml/raxml.py
+python/treefix_raxml/raxml_wrap.c
