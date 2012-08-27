@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # package starmp
 
-files = ["python",
+files = ["src",
+         "python",
          "examples",
 
          "setup.py",
@@ -11,7 +12,9 @@ files = ["python",
 	 "CHANGES.txt"]
 
 exclude = ["examples/getexample\.sh", "examples/testmodels\.sh",
-           ".*\.linux", ".*\.pyc",
+           ".*\.linux", ".*\.pyc", ".*\.so",
+	   "python/treefix_raxml/raxml_wrap\.c",
+	   "python/treefix_raxml/raxml\.py",
            "python/treefix/models/*"]
 
 include = ["bin/treefix", "bin/treefix_compute",
@@ -31,7 +34,7 @@ if os.path.exists(pkgdir):
 
 exclude_expr = "|".join(exclude)
 
-p = Popen(["find"] + files, stdout=PIPE)
+p = Popen(["find", "-L"] + files, stdout=PIPE)
 all_files = [x.rstrip("\n") for x in p.stdout.readlines()]
 all_files = [x for x in all_files
              if not re.match(exclude_expr, x)] + include

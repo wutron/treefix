@@ -8,19 +8,27 @@ DEPENDENCIES
 TreeFix has the following requirements:
 
 - Python (2.5.4) -- http://python.org/
+- GCC compiler (4.1.2) -- http://gcc.gnu.org/
+- SWIG (1.3.29) -- http://www.swig.org/
+- Scipy (1.5.1) -- http://numpy.scipy.org/
 
 The following programs are optional:
 - Numpy (1.5.1) -- http://numpy.scipy.org/
   If Numpy is not found, the program uses Python's built-in 'random' module.
 
-Additionally, a python module is required for computing the test statistic for
-likelihood equivalence.  We have provided one using RAxML at 
-http://compbio.mit.edu/treefix/raxml.
+Additionally, Python modules are required for computing (1) p-values for likelihood 
+equivalence and (2) reconciliation costs.  We have provided default modules
+that compute (1) the p-value based on the Shimodaira-Hasegawa (SH) test statistic with 
+RAxML site-wise likelihoods and (2) the duplication-loss cost using maximum parsimony 
+reconciliation (MPR).  For other modules, see the website.
 
 =============================================================================
 INSTALL
 
-Run "python setup.py install".
+Run
+
+python setup.py build
+python setup.py install
 
 If you don't have permission to install software on your system, you can install
 into another directory using the --prefix or --home flags to setup.py.

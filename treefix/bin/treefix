@@ -6,7 +6,7 @@
 # (2) computing the species tree aware cost (inherits treefix.models.CostModel).
 #
 
-VERSION = "1.1.4"
+VERSION = "1.1.5"
 
 # python libraries
 import os, sys, optparse
@@ -158,6 +158,9 @@ def parse_args():
     parser.add_option_group(grp_debug)
 
     options, args = parser.parse_args()
+    if not options.input and len(args) == 0:
+        parser.print_help()
+	sys.exit(1)
 
     #=============================
     # check arguments

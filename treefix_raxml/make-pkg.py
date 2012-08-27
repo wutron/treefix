@@ -13,7 +13,7 @@ files = ["src",
 
 exclude = [".*\.pyc", ".*\.so",
 	   "python/treefix_raxml/raxml_wrap\.c",
-           "python/treefix_raxml/raxml.py",
+           "python/treefix_raxml/raxml\.py",
 	   "examples/getexample\.sh",
 	   "examples/test_swig\.py"]
 

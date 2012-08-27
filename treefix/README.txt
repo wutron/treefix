@@ -1,6 +1,6 @@
 TreeFix
 http://compbio.mit.edu/treefix/
-Yi-Chieh Wu, with libraries contributed from Matthew Rasmussen
+Yi-Chieh Wu
 
 =============================================================================
 ABOUT
@@ -12,12 +12,21 @@ TreeFix citation:
 Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed 
 gene tree error correction using species trees. Systematic Biology. Accepted.
 
-Additionally, please cite the respective paper corresponding to the module
-you use for computing the test statistic for likelihood equivalence.
-(See the README.txt files within their respective packages.)
 
-This package includes the Python source code of the TreeFix program
-as well as several library interfaces for python.
+
+By default, TreeFix uses p-values based on the SH test statistic, 
+as computed by RAxML.  If you use this default, please also cite
+
+Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses 
+with Thousands of Taxa and Mixed Models. Bioinformatics 22(21):2688-2690, 2006
+
+The original RAxML source code (v7.0.4) is written by Alexandros Stamatakis
+and available at http://sco.h-its.org/exelixis/software.html.
+
+
+
+This package includes the Python source code of the TreeFix program,
+modified RAxML source code, and several library interfaces for Python.
 
 
 =============================================================================
@@ -104,12 +113,9 @@ TreeFix requires python modules for
 (1) testing likelihood equivalence
     This should inherit treefix.models.StatModel.
     See treefix.models.raxmlmodel.RAxMLModel for an example using the
-    SH test statistic with RAxML sitewise likelihoods.
+    SH test statistic with RAxML site-wise likelihoods.
 
     Any program (e.g. CONSEL) may be used for the actual computation.
-    We have provided a module that uses RAxML
-    (requires a python wrapper around RAxML, available at
-    http://compbio.mit.edu/treefix/index.html#raxml).
 
 (2) computing the species tree aware cost
     This should inherit treefix.models.CostModel.

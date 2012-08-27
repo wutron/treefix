@@ -25,7 +25,7 @@ cd ../../
 
 python setup.py build_ext --inplace
 
-export PYTHONPATH=$PYTHONPATH:~/projects/treefix_raxml/python
+export PYTHONPATH=$PYTHONPATH:~/projects/treefix/treefix_raxml/python
 
 #=============================================================================
 # build source

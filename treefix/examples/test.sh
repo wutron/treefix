@@ -8,6 +8,10 @@
 
 # Or you can run from the source directory:
 
+cd ..
+python setup.py build_ext --inplace
+
+cd examples
 export PATH=$PATH:../bin
 export PYTHONPATH=$PYTHONPATH:../python
 

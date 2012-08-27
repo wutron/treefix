@@ -2,9 +2,11 @@ TreeFix
 a phylogenetic program for improving gene tree reconstructions using the species tree
 Copyright (C) 2011 by Yi-Chieh Wu
 
-and
+including
 
-modified Python libraries, originally by Matthew Rasmussen.
+modified Python libraries, original (C) 2005-2011 by Matthew Rasmussen
+modified RAxML source code, original (C) by Alexandros Stamatakis
+
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

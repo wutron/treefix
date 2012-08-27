@@ -122,6 +122,10 @@ def parse_args():
     parser.add_option_group(grp_info)
 
     options, args = parser.parse_args()
+    if not options.input and len(args) == 0:
+        parser.print_help()
+	sys.exit(1)
+
     return options, args
 
 def main():
