@@ -16,8 +16,9 @@ from rasmus import treelib, util
 #=============================================================================
 # command
 
-cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
-                   'DTL.linux')
+##cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
+##                   'DTL.linux')
+cmd = "DTL.linux"
 
 #============================================================================
 
@@ -83,6 +84,9 @@ class DTLModel(CostModel):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
                                 universal_newlines=True)
+        ret = proc.wait()
+        if ret != 0:
+            raise Exception("DTL failed with returncode %d" % ret)
         
         # parse output
         i = 0
@@ -130,7 +134,10 @@ class DTLModel(CostModel):
                                  '-L', str(self.losscost)],
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
-                                universal_newlines=True)       
+                                universal_newlines=True)
+        ret = proc.wait()
+        if ret != 0:
+            raise Exception("DTL failed with returncode %d" % ret)
                        
         # parse output
         cost = None

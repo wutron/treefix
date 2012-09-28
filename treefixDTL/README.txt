@@ -11,16 +11,42 @@ TreeFixDTL is a phylogenetic program that improves existing gene trees using
 the species tree.
 
 TreeFixDTL citation: 
-Bansal*, Wu*, Alm, Kellis. TreeFixDTL. In prep.
+Bansal*, Wu*, Alm, Kellis. Improving the Accuracy of Gene Tree Reconstruction
+in Prokaryotes: Strategies and Impact. In prep.
 
-Additionally, please cite the respective paper corresponding to the module
-you use for computing the test statistic for likelihood equivalence.
-(See the README.txt files within their respective packages.)
+
+
+By default, TreeFixDTL uses p-values based on the SH test statistic,
+as computed by RAxML.  If you use this default, please also cite
+
+Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses 
+with Thousands of Taxa and Mixed Models. Bioinformatics 22(21):2688-2690, 2006
+
+The original RAxML source code (v7.0.4) is written by Alexandros Stamatakis
+and available at http://sco.h-its.org/exelixis/software.html.
+
+
 
 This package includes the Python source code of the TreeFixDTL program
 (including the TreeFix program and TreeFixDTL wrapper),
-the ranger-dtl-U executable for Linux,
-as well as several library interfaces for python.
+modified RAxML source code, the ranger-dtl-U executable for Linux,
+as well as several library interfaces for Python.
+
+
+=============================================================================
+DETAILS
+
+TreeFixDTL is a simple wrapper around the TreeFix program that uses the
+ranger-dtl-U reconciliation model (v1.0) to determine the species tree aware cost.
+It has different default options to deal with prokaryotic species and
+removes some functionality from TreeFix that are incompatible with the
+ranger-dtl-U reconciliation model.  Note also that using default modules,
+TreeFixDTL returns an *unrooted* gene tree (though all trees used by the program
+are expected to be written as rooted trees in newick format).
+
+For more details on the underlying programs, see
+TreeFix    -- http://compbio.mit.edu/treefix/
+RANGER-DTL -- http://compbio.mit.edu/ranger-dtl/
 
 
 =============================================================================
@@ -88,17 +114,3 @@ Options:
 # Examples
 
 See examples/test.sh for an example of how to use TreeFixDTL.
-
-#=============================================================================
-# Miscellaneous
-
-TreeFixDTL is a simple wrapper around the TreeFix program that uses the 
-ranger-dtl-U reconciliation model to determine the species tree aware cost.
-It has different default options to deal with prokaryotic species and 
-removes some functionality from TreeFix that are incompatible with the
-ranger-dtl-U reconciliation model.  For more details on the underlying programs,
-see
-
-TreeFix    -- http://compbio.mit.edu/treefix/
-RANGER-DTL -- http://compbio.mit.edu/ranger-dtl/
-

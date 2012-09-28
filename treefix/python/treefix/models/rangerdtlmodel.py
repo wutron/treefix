@@ -1,5 +1,5 @@
 #
-# Python module for rangerDTL cost
+# Python module for ranger-dtl cost
 #
 
 # treefix libraries
@@ -17,6 +17,7 @@ from rasmus import treelib, util
 #=============================================================================
 # command
 
+# uses ranger-dtl-U v1.0
 ##cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
 ##                   "ranger-dtl-U.linux")
 cmd = "ranger-dtl-U.linux"
@@ -69,6 +70,8 @@ class DTLModel(CostModel):
               contains species names, so this function does NOT reroot.
               It simply delegates to compute_cost.
         """
+        if newCopy:
+            gtree = gtree.copy()
 
         if returnCost:
             mincost = self.compute_cost(gtree)
@@ -97,6 +100,9 @@ class DTLModel(CostModel):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
                                 universal_newlines=True)
+        ret = proc.wait()
+        if ret != 0:
+            raise Exception("ranger-dtl-U failed with returncode %d" % ret)
         
         # parse output
         cost = None

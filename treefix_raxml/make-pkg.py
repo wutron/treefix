@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# package pyraxml
+# package treefix_raxml
 
 files = ["src",
          "python",

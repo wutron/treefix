@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-# package starmp
+# package treefixDTL
 
-files = ["python",
+files = ["src",
+         "python",
          "examples",
 
          "setup.py",
@@ -11,14 +12,16 @@ files = ["python",
 	 "CHANGES.txt"]
 
 exclude = ["examples/getexample\.sh",
-           ".*\.linux", ".*\.pyc",
+           ".*\.linux", ".*\.pyc", ".*\.so",
+           "python/treefix_raxml/raxml_wrap\.c",
+	   "python/treefix_raxml/raxml\.py",
            "python/treefix/models/*"]
 
 include = ["bin/treefixDTL", "bin/treefix",
+           "bin/ranger-dtl-U.linux",
            "python/treefix/models/__init__.py",
            "python/treefix/models/raxmlmodel.py",
-	   "python/treefix/models/rangerdtlmodel.py",
-	   "python/treefix/models/ranger-dtl-U.linux"]
+	   "python/treefix/models/rangerdtlmodel.py"]
 
 #=============================================================================
 
@@ -32,7 +35,7 @@ if os.path.exists(pkgdir):
 
 exclude_expr = "|".join(exclude)
 
-p = Popen(["find"] + files, stdout=PIPE)
+p = Popen(["find", "-L"] + files, stdout=PIPE)
 all_files = [x.rstrip("\n") for x in p.stdout.readlines()]
 all_files = [x for x in all_files
              if not re.match(exclude_expr, x)] + include

@@ -132,18 +132,29 @@ def main():
     """main program"""
 
     # parse arguments
-    parse_args()
+    options, args = parse_args()
 
     # create command to treefix
-    args = ["treefix"]
-    if len(sys.argv) > 1:
-        args.extend(sys.argv[1:].split())
-    args.extend(["--freconroot", "0"])
-    cmd = ' '.join(args)
-##    print cmd
+    cmdargs = ["treefix"]
+    for opt, val in options.__dict__.iteritems():
+        if val is not None:
+            cmdargs.extend(["--%s" % opt, str(val)])
+    cmdargs.extend(["--freconroot", "0"])
+    cmdargs.extend(args)
+    cmd = ' '.join(map(lambda x: x if x.find(' ') == -1 else "\"%s\"" % x, cmdargs))
+
+    # log
+    print "TreeFixDTL version: %s\n" % VERSION
+    print "TreeFixDTL executed with the following arguments:"
+    print "%s %s\n" % (os.path.basename(sys.argv[0]), 
+                       ' '.join(map(lambda x: x if x.find(' ') == -1 else "\"%s\"" % x, 
+                                    sys.argv[1:])))
+    print "TreeFix command:"
+    print cmd
+    print "\n\n"
     
     # delegate
-    return subprocess.call(args)
+    return subprocess.call(cmdargs)
     
 # main function
 if __name__ == "__main__":

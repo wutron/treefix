@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# package starmp
+# package treefix
 
 files = ["src",
          "python",

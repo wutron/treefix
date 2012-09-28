@@ -8,6 +8,10 @@
 
 # Or you can run from the source directory:
 
+cd ..
+python setup.py build_ext --inplace
+
+cd examples
 export PATH=$PATH:../bin
 export PYTHONPATH=$PYTHONPATH:../python
 
@@ -34,21 +38,26 @@ treefixDTL -h
 #     -U <user tree file extension>, --usertreeext=<user tree file extension>
 #                         check if user tree is visited in search
 #
+#   Likelihood Model:
+#     -e <extra arguments to module>, --extra=<extra arguments to module>
+#                         extra arguments to pass to program
+#
 #   Information:
 #     -V <verbosity level>, --verbose=<verbosity level>
 #                         verbosity level (0=quiet, 1=low, 2=medium, 3=high)
 #     -l <log file>, --log=<log file>
 #                         log filename.  Use '-' to display on stdout.
 
-treefix \
+treefixDTL \
     -s config/S1.stree \
     -S config/S.smap \
     -A .pep.align \
-    -o .pep.raxml.tree \
+    -o .pep.raxml.boot.tree \
     -n .pep.raxml.treefixDTL.tree \
     -U .tree \
+    -e "-m PROTGAMMAJTT -e 2.0" \
     -V1 -l sim/G1/G1.pep.raxml.treefixDTL.log \
-    sim/G1/G1.pep.raxml.tree
+    sim/G1/G1.pep.raxml.boot.tree
 
 #=============================================================================
 # Clean up

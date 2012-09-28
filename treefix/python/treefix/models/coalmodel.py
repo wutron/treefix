@@ -16,8 +16,9 @@ from rasmus import treelib, util
 #=============================================================================
 # command
 
-cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
-                   'genetreereport.linux')
+##cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
+##                   'genetreereport.linux')
+cmd = "genetreereport.linux"
 
 #============================================================================
 
@@ -65,6 +66,9 @@ class CoalModel(CostModel):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
                                 universal_newlines=True)
+        ret = proc.wait()
+        if ret != 0:
+            raise Exception("genetreereport failed with returncode %d" % ret)
                 
         # parse output
         i = None
@@ -113,6 +117,9 @@ class CoalModel(CostModel):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
                                 universal_newlines=True)
+        ret = proc.wait()
+        if ret != 0:
+            raise Exception("genetreereport failed with returncode %d" % ret)
                 
         # parse output
         cost = None
