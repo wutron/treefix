@@ -17,8 +17,10 @@ exclude = ["examples/getexample\.sh",
 	   "python/treefix_raxml/raxml\.py",
            "python/treefix/models/*"]
 
-include = ["bin/treefixDTL", "bin/treefix",
+include = ["bin/treefix", "bin/treefix_compute",
+           "bin/treefixDTL",
            "bin/ranger-dtl-U.linux",
+	   "bin/ranger-dtl-U.mac",
            "python/treefix/models/__init__.py",
            "python/treefix/models/raxmlmodel.py",
 	   "python/treefix/models/rangerdtlmodel.py"]

@@ -1,5 +1,5 @@
 #
-# Python module for dup-loss-coal (ils) cost
+# Python module for dup-loss-ils cost
 #
 
 # treefix libraries
@@ -55,15 +55,22 @@ class DLCModel(CostModel):
                           help="locus tree output file")
 
         grp_search = optparse.OptionGroup(parser, "Search Options")
-        grp_search.add_option("--dcs", dest="dcs",
-                              metavar="<DCS threshold>",
-                              default=0.25, type="float",
-                              help="duplication consistency score threshold: " +
-                              "DCS >/<= thr resolves to DUP/ILS (default: 0)")
-        grp_search.add_option("--switch", dest="switch",
-                              default=False, action="store_true",
-                              help="switches equality assignment for DCS threshold, " +
-                              "i.e. DCS >=/< thr resolves to DUP/ILS")
+        grp_search.add_option("--niter", dest="niter",
+                              metavar="<# iterations>",
+                              default=1000, type="int",
+                              help="number of search iterations (for locus tree) (default: 1000)")
+        grp_search.add_option("--freconroot", dest="freconroot",
+                              metavar="<fraction reconroot>",
+                              default=0.05, type="float",
+                              help="fraction of search proposals to reconroot (default: 1.0)")
+        grp_search.add_option("--seed", dest="seed",
+                              metavar="<seed>",
+                              type="int",
+                              help="seed value for random generator")
+        grp_search.add_option("--rf", dest="rf",
+                              metavar="<RF error threshold>",
+                             default=0.5, type="float",
+                             help="Robinson-Foulds error threshold between gene tree and locus tree")
         parser.add_option_group(grp_search)
     
         self.parser = parser
@@ -71,10 +78,6 @@ class DLCModel(CostModel):
         CostModel._parse_args(self, extra)
 
         self.locustree = None
-
-##    def __del__(self):
-##        """Cleans up the model"""
-##        self.locustree.write()
 
     def optimize_model(self, gtree, stree, gene2species):
         """Optimizes the model"""
@@ -87,11 +90,13 @@ class DLCModel(CostModel):
             self.parser.error("-L/--losscost must be >= 0: " + str(self.losscost))
         if self.coalcost < 0:
             self.parser.error("-C/--coalcost must be >= 0: " + str(self.coalcost))
-        if self.output is None:
-            self.parser.error("-o/--output must be specified")
+        #if self.output is None:
+        #    self.parser.error("-o/--output must be specified")
         
-        if self.dcs < 0 or self.dcs > 1:
-            self.parser.error("--dcs must be in [0,1]: " + str(self.dcs))
+        if self.niter < 1:
+            self.parser.error("--niter must be >= 1: %d" % options.niter)
+        if self.rf < 0 or self.rf > 1:
+            self.parser.error("--rf must be in [0,1]: " + str(self.rf))
 
         # copy over tree topology
         ltree = treelib.Tree(nextname=gtree.nextname)
@@ -208,7 +213,3 @@ class DLCModel(CostModel):
             if self.losscost != 0:
                 cost += phylo.count_loss(ltree, self.stree, recon) * self.losscost
         return cost
-
-    def _create_locus_tree(self, gtree):
-        
-        pass

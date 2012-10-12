@@ -29,7 +29,7 @@ and available at http://sco.h-its.org/exelixis/software.html.
 
 This package includes the Python source code of the TreeFixDTL program
 (including the TreeFix program and TreeFixDTL wrapper),
-modified RAxML source code, the ranger-dtl-U executable for Linux,
+modified RAxML source code, the ranger-dtl-U executable for Linux and Mac,
 as well as several library interfaces for Python.
 
 

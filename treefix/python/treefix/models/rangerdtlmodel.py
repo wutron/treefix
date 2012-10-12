@@ -20,7 +20,7 @@ from rasmus import treelib, util
 # uses ranger-dtl-U v1.0
 ##cmd = os.path.join(os.path.realpath(os.path.dirname(__file__)),
 ##                   "ranger-dtl-U.linux")
-cmd = "ranger-dtl-U.linux"
+##cmd = "ranger-dtl-U.linux"
 
 patt = "The minimum reconciliation cost is: (?P<cost>\d+) \(Duplications: (?P<D>\d+), Transfers: (?P<T>\d+), Losses: (?P<L>\d+)\)"
 
@@ -33,23 +33,31 @@ class DTLModel(CostModel):
         """Initializes the model"""
         CostModel.__init__(self, extra)
 
-        self.VERSION = "0.1.0"
+        self.VERSION = "0.1.1"
         self.mincost = 0
 
         parser = optparse.OptionParser(prog="DTLModel")
+	parser.add_option("--cmd", dest="cmd",
+	                  metavar="<ranger-dtl-U command>",
+	                  default="ranger-dtl-U",
+			  help="ranger-dtl-U command (default: ranger-dtl-U)")
         parser.add_option("-D", "--dupcost", dest="dupcost",
-                          metavar="<dup cost>",
+                          metavar="<duplication cost>",
                           default=2, type="int",
-                          help="duplication cost (default: 2)")
-        parser.add_option("-T", "--transfercost", dest="transfercost",
+                          help="duplication cost, integer only (default: 2)")
+        parser.add_option("-T", "--transcost", "--transfercost", dest="transcost",
                           metavar="<transfer cost>",
                           default=3, type="int",
-                          help="transfer cost (default: 3)")
+                          help="transfer cost, integer only (default: 3)")
         parser.add_option("-L", "--losscost", dest="losscost",
                           metavar="<loss cost>",
                           default=1, type="int",
-                          help="loss cost (default: 1)")
-        self.parser = parser
+                          help="loss cost, integer only (default: 1)")
+        parser.add_option("--seed", dest="seed",
+	                  metavar="<seed>",
+			  type="int",
+			  help="user defined random number generator seed")
+	self.parser = parser
 
         CostModel._parse_args(self, extra)
 
@@ -91,12 +99,17 @@ class DTLModel(CostModel):
         treeout.write("\n")
         treeout.close()
 
-        # execute command
-        proc = subprocess.Popen([cmd,
-                                 '-i', self.treefile,
-                                 '-D', str(self.dupcost),
-                                 '-T', str(self.transfercost),
-                                 '-L', str(self.losscost)],
+        # create command
+	args = [self.cmd,
+	        '-i', self.treefile,
+		'-D', str(self.dupcost),
+		'-T', str(self.transcost),
+		'-L', str(self.losscost)]
+	if self.seed:
+	    args.extend(['--seed', str(self.seed)])
+	
+	# execute command
+        proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
                                 universal_newlines=True)

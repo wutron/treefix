@@ -7,10 +7,17 @@
 #   python setup.py install
 #
 
-import os,sys
+import os, sys, shutil
 from distutils.core import setup, Extension
 
 VERSION = '1.0.0'
+
+if not os.path.exists('bin/ranger-dtl-U'):
+    if sys.platform == 'darwin':
+        ranger_dtl_script = 'bin/ranger-dtl-U.mac'
+    else:
+        ranger_dtl_script = 'bin/ranger-dtl-U.linux'
+    shutil.copy(ranger_dtl_script, 'bin/ranger-dtl-U')
 
 extra_link_args = []
 if sys.platform != 'darwin':
@@ -55,7 +62,7 @@ setup(
 	      'treefix_raxml.deps.rasmus', 'treefix_raxml.deps.rasmus.ply',
 	      'treefix_raxml.deps.compbio'],
     py_modules=[],
-    scripts=['bin/treefix', 'bin/treefixDTL', 'bin/ranger-dtl-U.linux'],
+    scripts=['bin/treefix', 'bin/treefix_compute', 'bin/treefixDTL', 'bin/ranger-dtl-U'],
     ext_modules=[raxml_module]
     )
 
