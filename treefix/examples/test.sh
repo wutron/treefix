@@ -62,6 +62,27 @@ rm sim-fungi/0/0.nt.raxml.treefix{.tree,.log}
 
 
 #=============================================================================
+# Using other parameters in the likelihood or reconciliation cost modules
+
+# By default, the likelihood module used by TreeFix assumes a GTRGAMMA model of 
+# sequence evolution and a model optimization precision of eps=2.0.  
+# To change this, add the following to the treefix command:
+#     -e '-m <model> -e <eps>'
+# The specified model must be supported by RAxML.
+
+# By default, the reconciliation cost module used by TreeFix assumes equal costs 
+# (D=1, L=1) for inferred (duplication-loss) events.  
+# To change this, add the following to the treefix command:
+#     -E '-D <dup cost> -L <loss cost>'
+# The costs must be non-negative.
+
+# Be sure to watch the quotes.  The '-e' ('-E') switch tells treefix to pass the 
+# following options to the module used for likelihood (reconciliation cost) calculation.
+# See also "test RAxML module" and "test dup/loss module" below.
+
+
+
+#=============================================================================
 # Helper executable to test various (likelihood and cost) modules
 
 # show help information

@@ -1,6 +1,12 @@
 TreeFix Change Log
 -----------------------
 
+treefix-1.1.6 (2012/11/06)
+-----------------------
+- changed treefix_raxml to use approximation for normal distribution if scipy library is not found
+- updated README and examples to show how to pass parameters to likelihood/reconciliation modules
+
+
 treefix-1.1.5 (2012/08/27)
 -----------------------
 - added TreeFix-RAxML to package 

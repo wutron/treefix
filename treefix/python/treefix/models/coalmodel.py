@@ -51,11 +51,12 @@ class CoalModel(CostModel):
 
         # write species tree and gene tree using species map
         treeout = util.open_stream(self.treefile, 'w')
-        self.stree.write(treeout, oneline=True)
+        self.stree.write(treeout, oneline=True, writeData=lambda x: "")
         treeout.write('\n')
         edges = []
         for gtree, edge in self._reroot_helper(gtree, newCopy=newCopy, returnEdge=True):
-            gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True, writeData=lambda x: "")
+            gtree.write(treeout, namefunc=lambda name: self.gene2species(name),
+	                oneline=True, writeData=lambda x: "")
             treeout.write('\n')
             edges.append(edge)
         treeout.close()
@@ -107,7 +108,8 @@ class CoalModel(CostModel):
         treeout = util.open_stream(self.treefile, 'w')
         self.stree.write(treeout, oneline=True, writeData=lambda x: "")
         treeout.write('\n')
-        gtree.write(treeout, namefunc=lambda name: self.gene2species(name), oneline=True)
+        gtree.write(treeout, namefunc=lambda name: self.gene2species(name),
+	            oneline=True, writeData=lambda x: "")
         treeout.write('\n')
         treeout.close()
 

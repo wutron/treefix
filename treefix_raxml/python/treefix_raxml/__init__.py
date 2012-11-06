@@ -7,9 +7,6 @@ import sys,os
 # import RAXML SWIG module
 import raxml
 
-# scipy libraries
-from scipy.stats import norm
-
 # load rasmus libraries if available
 def load_deps(dirname="deps"):
     sys.path.append(os.path.realpath(
@@ -23,6 +20,16 @@ except ImportError:
     load_deps()
     import rasmus, compbio
 from rasmus import treelib
+
+# normal distribution
+try:
+    # scipy libraries
+    from scipy.stats import norm
+    sf = norm.sf
+except ImportError:
+    # use approximation from rasmus stats library
+    from rasmus import stats
+    sf = lambda x: 1-stats.normalCdf(x, (0,1))
 
 #=============================================================================
 
@@ -117,19 +124,19 @@ class RAxML:
             zscore, Dlnl = raxml.compute_LH(self.adef, self.tr,
                                             self.best_LH, self.weight_sum, self.best_vector)
 
-            # really should just use pval = norm.sf(zscore) if one of the trees is the ML tree,
+            # really should just use pval = sf(zscore) if one of the trees is the ML tree,
             # but SH test compares two a priori trees (to determine if T_x and T_y
             # are equally good explanations of the data), so raxml uses two-sided test
             if report == "under":
                 # high zscore => low pval => statistically worse tree
-                return norm.sf(zscore), Dlnl
+                return sf(zscore), Dlnl
             elif report == "over":
                 # low zscore => low pval => statistically better tree
-                return 1-norm.sf(zscore), Dlnl
+                return 1-sf(zscore), Dlnl
             elif report == "both":
                 # high abs(zscore) => low pval => statistically nonequivalent tree
-                return norm.sf(abs(zscore))*2, Dlnl
+                return sf(abs(zscore))*2, Dlnl
             else:
-                Exception("report must be 'over', 'under', or 'both': %s" % report)
+                raise Exception("report must be 'over', 'under', or 'both': %s" % report)
 
         raise Exception("%s test statistic not implemented" % test)

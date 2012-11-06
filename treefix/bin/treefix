@@ -6,7 +6,7 @@
 # (2) computing the species tree aware cost (inherits treefix.models.CostModel).
 #
 
-VERSION = "1.1.5"
+VERSION = "1.1.6"
 
 # python libraries
 import os, sys, optparse

@@ -10,7 +10,7 @@
 import os,sys
 from distutils.core import setup, Extension
 
-VERSION = '1.1.5'
+VERSION = '1.1.6'
 
 extra_link_args = []
 if sys.platform != 'darwin':
