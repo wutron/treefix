@@ -64,20 +64,32 @@ treefixDTL \
     -V1 -l sim/G1/G1.pep.raxml.treefixDTL.log \
     sim/G1/G1.pep.raxml.boot.tree
 
-# By default, the RAxML likelihood module assumes a GTRGAMMA model of evolution
-# and optimizes log likelihood units to a precision of 2.0.
-# If you want to use other options, use '-e "<options>"'.
-# See also "test RAxML module" below and the RAxML manual.
-
-# By default, the RANGER-DTL reconciliation module assumes that the RANGER-DTL executable 
-# is in the system path and can be executed by running "ranger-dtl-U".
-# If you want to use a different executable, use '-E "--cmd <command>"'.
-# See also "test RANGER-DTL module" below and the RANGER-DTL manual.
-
 #=============================================================================
 # Clean up
 
 rm sim/G1/G1.pep.raxml.treefixDTL{.tree,.log}
+
+
+
+#=============================================================================
+# Using other parameters in the likelihood or reconciliation cost modules
+
+# By default, the likelihood module used by TreeFixDTL assumes a GTRGAMMA model of
+# sequence evolution and a model optimization precision of eps=2.0.
+# To change this, add the following to the treefixDTL command:
+#     -e '-m <model> -e <eps>'
+# The specified model must be supported by RAxML.
+
+# By default, the reconciliation cost module used by TreeFixDTL assumes that the
+# RANGER-DTL-U executable is in the system path and can be executed by running 
+# "ranger-dtl-U".  TreeFixDTL uses default costs (D=2, T=3, L=1) for inferred events.
+# To change this, add the following to the treefixDTL command:
+#     -E '-D <dup cost> -T <trans cost> -L <loss cost>'
+# The costs must be non-negative integers.
+
+# Be sure to watch the quotes.  The '-e' ('-E') switch tells treefixDTL to pass the
+# following options to the module used for likelihood (reconciliation cost) calculation.
+# See also "test RAxML module" and "test RANGER-DTL module" below.
 
 
 

@@ -12,7 +12,7 @@ the species tree.
 
 TreeFixDTL citation: 
 Bansal*, Wu*, Alm, Kellis. Improving the Accuracy of Gene Tree Reconstruction
-in Prokaryotes: Strategies and Impact. In prep.
+in Prokaryotes: Strategies and Impact. Submitted.
 
 
 
@@ -29,7 +29,7 @@ and available at http://sco.h-its.org/exelixis/software.html.
 
 This package includes the Python source code of the TreeFixDTL program
 (including the TreeFix program and TreeFixDTL wrapper),
-modified RAxML source code, the ranger-dtl-U executable for Linux and Mac,
+modified RAxML source code, the ranger-dtl-U executable,
 as well as several library interfaces for Python.
 
 

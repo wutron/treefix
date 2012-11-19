@@ -1,8 +1,8 @@
 TreeFixDTL Change Log
 -----------------------
 
-treefixDTL-1.0.0 (2012/09/28)
+treefixDTL-1.0.0 (2012/11/19)
 -----------------------
 - initial release with TreeFixDTL paper
-- wrapper around TreeFix v1.1.5
+- wrapper around TreeFix v1.1.6
 

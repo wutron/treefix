@@ -12,18 +12,19 @@ TreeFixDTL has the following requirements:
 - Python (2.5.4) -- http://python.org/
 - GCC compiler (4.1.2) -- http://gcc.gnu.org/
 - SWIG (1.3.29) -- http://www.swig.org/
-- Scipy (1.5.1) -- http://numpy.scipy.org/
 
 The following programs are optional:
 - Numpy (1.5.1) -- http://numpy.scipy.org/
   If Numpy is not found, the program uses Python's built-in 'random' module.
+- Scipy (0.7.1) -- http://numpy.scipy.org/
+  If Scipy is not found, the program uses internal libraries to approximate
+  the normal distribution (so p-values may be slightly off).
 
 Additionally, Python modules are required for computing (1) p-values for likelihood 
 equivalence and (2) reconciliation costs.  We have provided default modules
 that compute (1) the p-value based on the Shimodaira-Hasegawa (SH) test statistic with 
 RAxML site-wise likelihoods and (2) the duplication-transfer-loss cost
-using ranger-dtl-U reconciliation.  For other modules, see the
-website.
+using ranger-dtl-U reconciliation.  For other modules, see the website.
 
 =============================================================================
 INSTALL
