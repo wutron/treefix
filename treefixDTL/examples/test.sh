@@ -1,6 +1,6 @@
 #!/bin/sh python
 #
-# This is an example of how to use TreeFixDTL to correct a tree topology.
+# This is an example of how to use TreeFix-DTL to correct a tree topology.
 #
 
 # Make sure tools are compiled and installed before running the commands in 
@@ -74,15 +74,15 @@ rm sim/G1/G1.pep.raxml.treefixDTL{.tree,.log}
 #=============================================================================
 # Using other parameters in the likelihood or reconciliation cost modules
 
-# By default, the likelihood module used by TreeFixDTL assumes a GTRGAMMA model of
+# By default, the likelihood module used by TreeFix-DTL assumes a GTRGAMMA model of
 # sequence evolution and a model optimization precision of eps=2.0.
 # To change this, add the following to the treefixDTL command:
 #     -e '-m <model> -e <eps>'
 # The specified model must be supported by RAxML.
 
-# By default, the reconciliation cost module used by TreeFixDTL assumes that the
+# By default, the reconciliation cost module used by TreeFix-DTL assumes that the
 # RANGER-DTL-U executable is in the system path and can be executed by running 
-# "ranger-dtl-U".  TreeFixDTL uses default costs (D=2, T=3, L=1) for inferred events.
+# "ranger-dtl-U".  TreeFix-DTL uses default costs (D=2, T=3, L=1) for inferred events.
 # To change this, add the following to the treefixDTL command:
 #     -E '-D <dup cost> -T <trans cost> -L <loss cost>'
 # The costs must be non-negative integers.

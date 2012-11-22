@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # 
-# setup for TreeFixDTL library packages
+# setup for TreeFix-DTL library packages
 #
 # use the following to install:
 #   python setup.py build
@@ -33,13 +33,13 @@ raxml_module = Extension('treefix_raxml._raxml',
 setup(
     name='treefixDTL',
     version=VERSION,
-    description='TreeFixDTL',
+    description='TreeFix-DTL',
     long_description = """
             """,
     author='Yi-Chieh Wu',
     author_email='yjw@mit.edu',
-#    url='http://compbio.mit.edu/treefixDTL/',
-#    download_url='http://compbio.mit.edu/pub/treefixDTL/treefixDTL-%s.tar.gz' % VERSION,
+#    url='http://compbio.mit.edu/treefix-dtl/',
+#    download_url='http://compbio.mit.edu/treefix-dtl/pub/sw/treefixDTL-%s.tar.gz' % VERSION,
     
     classifiers=[
           'Development Status :: 5 - Production/Stable',

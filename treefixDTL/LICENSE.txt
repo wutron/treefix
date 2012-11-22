@@ -1,5 +1,5 @@
-TreeFixDTL
-a phylogenetic program for improving gene tree reconstructions using the species tree
+TreeFix-DTL
+a phylogenetic program for improving prokaryotic gene tree reconstructions using the species tree
 Copyright (C) 2012 by Yi-Chieh Wu
 
 and

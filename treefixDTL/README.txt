@@ -1,5 +1,5 @@
-TreeFixDTL
-http://compbio.mit.edu/treefixDTL/
+TreeFix-DTL
+http://compbio.mit.edu/treefix-dtl/
 Yi-Chieh Wu,
 with libraries contributed by Matthew Rasmussen
 and executables contributed by Mukul Bansal
@@ -7,16 +7,28 @@ and executables contributed by Mukul Bansal
 =============================================================================
 ABOUT
 
-TreeFixDTL is a phylogenetic program that improves existing gene trees using
-the species tree.
+TreeFix-DTL is a phylogenetic program for reconstructing highly
+accurate prokaryotic gene trees.  TreeFix-DTL uses the species tree
+topology to guide the reconstruction of the gene tree and balanaces
+sequence and species tree information through a statistical hypothesis
+testing framework.  TreeFix-DTL operates under the assumption that
+multiple gene tree topologies are "statistically equivalent" (as
+evaluated using a likelihood ratio test), and the optimal topology
+among this set is one that is most parsimonious (where the cost of the
+topology is dependent on the inferred gene duplication, horizontal
+gene transfer, and gene loss events).  Specifically, given a (maximum
+likelihood) gene tree, a multiple sequence alignment, and a rooted
+species tree, TreeFix-DTL finds an alternative gene tree topology that
+minimizes the duplication-transfer-loss reconciliation cost while
+still being supported by the sequence data.
 
-TreeFixDTL citation: 
+TreeFix-DTL citation: 
 Bansal*, Wu*, Alm, Kellis. Improving the Accuracy of Gene Tree Reconstruction
 in Prokaryotes: Strategies and Impact. Submitted.
 
 
 
-By default, TreeFixDTL uses p-values based on the SH test statistic,
+By default, TreeFix-DTL uses p-values based on the SH test statistic,
 as computed by RAxML.  If you use this default, please also cite
 
 Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses 
@@ -27,8 +39,8 @@ and available at http://sco.h-its.org/exelixis/software.html.
 
 
 
-This package includes the Python source code of the TreeFixDTL program
-(including the TreeFix program and TreeFixDTL wrapper),
+This package includes the Python source code of the TreeFix-DTL program
+(including the TreeFix program and TreeFix-DTL wrapper),
 modified RAxML source code, the ranger-dtl-U executable,
 as well as several library interfaces for Python.
 
@@ -36,12 +48,12 @@ as well as several library interfaces for Python.
 =============================================================================
 DETAILS
 
-TreeFixDTL is a simple wrapper around the TreeFix program that uses the
+TreeFix-DTL is a wrapper around the TreeFix program that uses the
 ranger-dtl-U reconciliation model (v1.0) to determine the species tree aware cost.
 It has different default options to deal with prokaryotic species and
 removes some functionality from TreeFix that are incompatible with the
 ranger-dtl-U reconciliation model.  Note also that using default modules,
-TreeFixDTL returns an *unrooted* gene tree (though all trees used by the program
+TreeFix-DTL returns an *unrooted* gene tree (though all trees used by the program
 are expected to be written as rooted trees in newick format).
 
 For more details on the underlying programs, see
@@ -113,4 +125,4 @@ Options:
 #=============================================================================
 # Examples
 
-See examples/test.sh for an example of how to use TreeFixDTL.
+See examples/test.sh for an example of how to use TreeFix-DTL.

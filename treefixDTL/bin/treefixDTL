@@ -27,9 +27,9 @@ def parse_args():
         version = "%prog " + VERSION,
 
         description =
-             "TreeFixDTL is a phylogenetic program for improving gene tree reconstructions using " +
+             "TreeFix-DTL is a phylogenetic program for improving prokaryotic gene tree reconstructions using " +
              "a test statistic for likelihood equivalence and a species tree aware cost function. " +
-             "See http://compbio.mit.edu/treefixDTL for details.",
+             "See http://compbio.mit.edu/treefix-dtl for details.",
              
         epilog =
              "Written by Yi-Chieh Wu (yjw@mit.edu), Massachusetts Institute of Technology. " +
@@ -144,8 +144,8 @@ def main():
     cmd = ' '.join(map(lambda x: x if x.find(' ') == -1 else "\"%s\"" % x, cmdargs))
 
     # log
-    print "TreeFixDTL version: %s\n" % VERSION
-    print "TreeFixDTL executed with the following arguments:"
+    print "TreeFix-DTL version: %s\n" % VERSION
+    print "TreeFix-DTL executed with the following arguments:"
     print "%s %s\n" % (os.path.basename(sys.argv[0]), 
                        ' '.join(map(lambda x: x if x.find(' ') == -1 else "\"%s\"" % x, 
                                     sys.argv[1:])))

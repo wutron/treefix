@@ -1,5 +1,5 @@
-TreeFixDTL
-http://compbio.mit.edu/treefixDTL/
+TreeFix-DTL
+http://compbio.mit.edu/treefix-dtl/
 Yi-Chieh Wu, 
 with libraries contributed by Matthew Rasmussen
 and executables contributed by Mukul Bansal
@@ -7,7 +7,7 @@ and executables contributed by Mukul Bansal
 =============================================================================
 DEPENDENCIES
 
-TreeFixDTL has the following requirements:
+TreeFix-DTL has the following requirements:
 
 - Python (2.5.4) -- http://python.org/
 - GCC compiler (4.1.2) -- http://gcc.gnu.org/
