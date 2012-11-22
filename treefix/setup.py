@@ -10,7 +10,10 @@
 import os,sys
 from distutils.core import setup, Extension
 
-VERSION = '1.1.6'
+sys.path.append(os.path.realpath(
+            os.path.join(os.path.dirname(__file__), "python")))
+import treefix
+VERSION = treefix.PROGRAM_VERSION_TEXT
 
 extra_link_args = []
 if sys.platform != 'darwin':
@@ -32,6 +35,7 @@ setup(
     author='Yi-Chieh Wu',
     author_email='yjw@mit.edu',
 #    url='http://compbio.mit.edu/treefix/',
+#    download_url='http://compbio.mit.edu/treefix/pub/sw/treefix-%s.tar.gz' % VERSION,
     
     classifiers=[
           'Development Status :: 5 - Production/Stable',

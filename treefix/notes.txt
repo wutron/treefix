@@ -1,0 +1,1 @@
+TreeFix may search over the true tree but NOT accept it [though it satisfies (pval >= alpha) and (cost < mincost or (cost == mincost and Dlnl <= minDlnl))] if it is in the same pool as another accepted tree.

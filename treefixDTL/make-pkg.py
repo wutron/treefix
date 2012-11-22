@@ -12,15 +12,19 @@ files = ["src",
 	 "CHANGES.txt"]
 
 exclude = ["examples/getexample\.sh",
-           ".*\.linux", ".*\.pyc", ".*\.so",
+           ".*\.linux$", ".*\.pyc$", ".*\.so$",
            "python/treefix_raxml/raxml_wrap\.c",
 	   "python/treefix_raxml/raxml\.py",
-           "python/treefix/models/*"]
+	   "python/treefix/[^/]*\.py",
+           "python/treefix/models/.*"]
 
 include = ["bin/treefix", "bin/treefix_compute",
            "bin/treefixDTL",
            "bin/ranger-dtl-U.linux",
 	   "bin/ranger-dtl-U.mac",
+	   "python/treefix/__init__.py",
+	   "python/treefix/common.py",
+	   "python/treefix/treefixDTL.py",
            "python/treefix/models/__init__.py",
            "python/treefix/models/raxmlmodel.py",
 	   "python/treefix/models/rangerdtlmodel.py"]

@@ -10,7 +10,10 @@
 import os, sys, shutil
 from distutils.core import setup, Extension
 
-VERSION = '1.0.0'
+sys.path.append(os.path.realpath(
+            os.path.join(os.path.dirname(__file__), "python")))
+from treefix import treefixDTL
+VERSION = treefixDTL.PROGRAM_VERSION_TEXT
 
 if not os.path.exists('bin/ranger-dtl-U'):
     if sys.platform == 'darwin':

@@ -8,15 +8,13 @@ import commands, subprocess
 
 # treefix libraries
 from treefix import common
-
-#==========================================================
-# treefix binary
-
-VERSION = "1.0.0"
-#commands.getoutput("treefix --version").rsplit()[-1]
+from treefix import treefixDTL
 
 #==========================================================
 # parser
+
+VERSION = treefixDTL.PROGRAM_VERSION_TEXT
+#commands.getoutput("treefix --version").rsplit()[-1]
 
 def parse_args():
     """parse input arguments"""

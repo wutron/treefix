@@ -6,8 +6,6 @@
 # (2) computing the species tree aware cost (inherits treefix.models.CostModel).
 #
 
-VERSION = "1.1.6"
-
 # python libraries
 import os, sys, optparse
 import StringIO
@@ -31,6 +29,8 @@ from compbio import phylo, alignlib
 
 #==========================================================
 # parser
+
+VERSION = treefix.PROGRAM_VERSION_TEXT
 
 def parse_args():
     """parse input arguments"""

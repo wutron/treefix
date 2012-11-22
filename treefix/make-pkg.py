@@ -12,12 +12,15 @@ files = ["src",
 	 "CHANGES.txt"]
 
 exclude = ["examples/getexample\.sh", "examples/testmodels\.sh",
-           ".*\.linux", ".*\.pyc", ".*\.so",
-	   "python/treefix_raxml/raxml_wrap\.c",
-	   "python/treefix_raxml/raxml\.py",
-           "python/treefix/models/*"]
+           ".*\.linux$", ".*\.pyc$", ".*\.so$",
+           "python/treefix_raxml/raxml_wrap\.c",
+           "python/treefix_raxml/raxml\.py",
+           "python/treefix/[^/]*\.py",
+           "python/treefix/models/.*"]
 
 include = ["bin/treefix", "bin/treefix_compute",
+           "python/treefix/__init__.py",
+           "python/treefix/common.py",
            "python/treefix/models/__init__.py",
            "python/treefix/models/duplossmodel.py",
 	   "python/treefix/models/raxmlmodel.py"]
