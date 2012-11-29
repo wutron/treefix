@@ -18,6 +18,8 @@ VERSION = treefixDTL.PROGRAM_VERSION_TEXT
 if not os.path.exists('bin/ranger-dtl-U'):
     if sys.platform == 'darwin':
         ranger_dtl_script = 'bin/ranger-dtl-U.mac'
+    elif sys.platform == 'cygwin':
+        ranger_dtl_script = 'bin/ranger-dtl-U.exe'
     else:
         ranger_dtl_script = 'bin/ranger-dtl-U.linux'
     shutil.copy(ranger_dtl_script, 'bin/ranger-dtl-U')

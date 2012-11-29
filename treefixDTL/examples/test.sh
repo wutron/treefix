@@ -15,6 +15,8 @@ python setup.py build_ext --inplace
 cp bin/ranger-dtl-U.linux bin/ranger-dtl-U
 # if using Mac
 cp bin/ranger-dtl-U.mac bin/ranger-dtl-U
+# if using Windows (Cygwin)
+cp bin/ranger-dtl-U.exe bin/ranger-dtl-U
 
 cd examples
 export PATH=$PATH:../bin
