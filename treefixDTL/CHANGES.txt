@@ -1,6 +1,12 @@
 TreeFix-DTL Change Log
 -----------------------
 
+treefixDTL-1.0.1 (2012/12/14)
+-----------------------
+- added Cygwin support
+- wrapper around TreeFix v1.1.7
+
+
 treefixDTL-1.0.0 (2012/11/21)
 -----------------------
 - initial release with TreeFix-DTL paper

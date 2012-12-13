@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # 
 # setup for TreeFix-DTL library packages
+# (if TreeFix has already been installed)
 #
 # use the following to install:
-#   python setup.py build
 #   python setup.py install
 #
 
@@ -25,19 +25,6 @@ if not os.path.exists('bin/ranger-dtl-U'):
     else:
         ranger_dtl_script = 'bin/ranger-dtl-U.linux'
     shutil.copy(ranger_dtl_script, 'bin/ranger-dtl-U')
-
-# platform dependency
-extra_link_args = []
-if sys.platform != 'darwin':
-    extra_link_args.append('-s')
-
-# raxml sources
-srcs = [os.path.join('src/raxml',fn) for fn in os.listdir('src/raxml') 
-        if (not os.path.isdir(fn)) and fn.endswith('.c')]
-raxml_module = Extension('treefix_raxml._raxml',
-                         sources=['python/treefix_raxml/raxml.i'] + srcs,
-                         extra_link_args=extra_link_args
-                         )
 
 setup(
     name='treefixDTL',
@@ -63,16 +50,10 @@ setup(
           ],
     
     package_dir = {'': 'python'},
-    packages=['treefix',
-              'treefix.models',
-              'treefix.deps.rasmus', 'treefix.deps.rasmus.ply', 
-              'treefix.deps.compbio',
-	      'treefix_raxml',
-	      'treefix_raxml.deps.rasmus', 'treefix_raxml.deps.rasmus.ply',
-	      'treefix_raxml.deps.compbio'],
-    py_modules=[],
-    scripts=['bin/treefix', 'bin/treefix_compute', 'bin/treefixDTL', 'bin/ranger-dtl-U'],
-    ext_modules=[raxml_module]
+    packages=[],
+    py_modules=['treefix.treefixDTL', 'treefix.models.rangerdtlmodel'],
+    scripts=['bin/treefixDTL', 'bin/ranger-dtl-U'],
+    ext_modules=[]
     )
 
 

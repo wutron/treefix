@@ -55,6 +55,9 @@ treefixDTL -h
 #     -l <log file>, --log=<log file>
 #                         log filename.  Use '-' to display on stdout.
 
+# if using Windows (Cygwin), also include '-E "--tmp <tmp directory>"'
+# The <tmp directory> must be a relative path and must exist.
+
 treefixDTL \
     -s config/S1.stree \
     -S config/S.smap \

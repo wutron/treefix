@@ -1,6 +1,11 @@
 TreeFix Change Log
 -----------------------
 
+treefix-1.1.7 (2012/12/14)
+-----------------------
+- simplified version control
+
+
 treefix-1.1.6 (2012/11/06)
 -----------------------
 - changed treefix_raxml to use approximation for normal distribution if scipy library is not found

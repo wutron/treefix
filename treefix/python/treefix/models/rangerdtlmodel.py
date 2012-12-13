@@ -40,7 +40,7 @@ class DTLModel(CostModel):
 	parser.add_option("--cmd", dest="cmd",
 	                  metavar="<ranger-dtl-U command>",
 	                  default="ranger-dtl-U",
-			  help="ranger-dtl-U command (default: ranger-dtl-U)")
+			  help="ranger-dtl-U command (default: \"ranger-dtl-U\")")
         parser.add_option("-D", "--dupcost", dest="dupcost",
                           metavar="<duplication cost>",
                           default=2, type="int",
@@ -57,13 +57,31 @@ class DTLModel(CostModel):
 	                  metavar="<seed>",
 			  type="int",
 			  help="user defined random number generator seed")
+        parser.add_option("--tmp", dest="tmp",
+                          metavar="<tmp directory>",
+                          help="directory for temporary files (must exist)")
+                          
 	self.parser = parser
 
         CostModel._parse_args(self, extra)
 
+        # check temporary directory
+        if self.tmp:
+            if not os.path.exists(os.path.realpath(self.tmp)):
+                raise Exception("--tmp directory does not exist")
+
         # make temporary file
-        fd, self.treefile = tempfile.mkstemp()
+        fd, self.treefile = tempfile.mkstemp(dir=self.tmp)
         os.close(fd)
+
+        # hack for cygwin (ranger-dtl-U cannot handle system files)
+        if sys.platform == 'cygwin':
+            cwd = os.getcwd()
+            if self.treefile.startswith(cwd):
+                # remove working path (and backslash)
+                self.treefile = self.treefile[len(cwd)+1:]
+            else:
+                raise Exception("--tmp must be a relative path when using cygwin")
 
     def __del__(self):
         """Cleans up the model"""
@@ -109,11 +127,14 @@ class DTLModel(CostModel):
 	    args.extend(['--seed', str(self.seed)])
 	
 	# execute command
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                universal_newlines=True)
-        ret = proc.wait()
+	try:
+            proc = subprocess.Popen(args,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    universal_newlines=True)
+            ret = proc.wait()
+        except:
+            raise Exception("ranger-dtl-U failed")
         if ret != 0:
             raise Exception("ranger-dtl-U failed with returncode %d" % ret)
         

@@ -6,6 +6,8 @@ files = ["src",
          "examples",
 
          "setup.py",
+         "setup_DTL.py",
+         "setup_TreeFixDTL.py",
          "README.txt",
 	 "INSTALL.txt",
 	 "LICENSE.txt",

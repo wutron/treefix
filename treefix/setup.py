@@ -10,7 +10,7 @@
 import os,sys
 from distutils.core import setup, Extension
 
-sys.path.append(os.path.realpath(
+sys.path.insert(0, os.path.realpath(
             os.path.join(os.path.dirname(__file__), "python")))
 import treefix
 VERSION = treefix.PROGRAM_VERSION_TEXT

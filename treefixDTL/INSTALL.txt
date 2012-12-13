@@ -14,9 +14,9 @@ TreeFix-DTL has the following requirements:
 - SWIG (1.3.29) -- http://www.swig.org/
 
 The following programs are optional:
-- Numpy (1.5.1) -- http://numpy.scipy.org/
+- Numpy (1.5.1) -- http://www.numpy.org/
   If Numpy is not found, the program uses Python's built-in 'random' module.
-- Scipy (0.7.1) -- http://numpy.scipy.org/
+- Scipy (0.7.1) -- http://www.scipy.org/
   If Scipy is not found, the program uses internal libraries to approximate
   the normal distribution (so p-values may be slightly off).
 
@@ -52,8 +52,31 @@ you will need to set your PYTHONPATH variable to the alternate location.
 See http://docs.python.org/inst/search-path.html for further details.
 
 =============================================================================
-MISCELLANEOUS
+INSTALL (if TreeFix is already installed)
 
-If you already have TreeFix and RANGER-DTL installed, you only need to add 
-the "treefixDTL" script and "rangerdtlmodel.py" module to their appropriate paths 
-("bin" and "<PYTHONPATH>/treefix/models", respectively).
+Run
+
+python setup_DTL.py install
+
+This installs the files that are specific to TreeFix-DTL or RANGER-DTL.  
+In particular, it installs the "ranger-dtl-U" and "treefixDTL" executables and
+the "rangerdtlmodel.py" module to their appropriate paths.
+
+If you did not use the default paths, you must also specify the TreeFix installation directory.  
+Using the regular setup.py script will work (as long as you use the same installation directory), 
+but you will be (unnecessarily) recompiling TreeFix and overwriting any existing ranger-dtl-U executable.
+
+=============================================================================
+INSTALL (if TreeFix and RANGER-DTL are already installed)
+
+Run
+
+python setup_TreeFixDTL.py install
+
+This installs the files that are specific to TreeFix-DTL.  In particular, 
+it installs the "treefixDTL" executable and the "rangerdtlmodel.py" module 
+to their appropriate paths.
+
+If you did not use the default paths, you must also specify the TreeFix installation directory.
+Using the regular setup.py script will work (as long as you use the same installation directory), 
+but you will be (unnecessarily) recompiling TreeFix.
