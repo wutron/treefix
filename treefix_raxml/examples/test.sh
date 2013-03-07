@@ -1,4 +1,4 @@
-#!/bin/sh python
+#!/usr/bin/bash
 #
 # This is an example of how to use TreeFix-RAxML to compute the SH statistic.
 #

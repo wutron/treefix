@@ -1,0 +1,2 @@
+- Check for rooted, binary trees as input
+- Check that # seqs == # leaves in input gene tree

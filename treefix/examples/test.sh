@@ -1,4 +1,4 @@
-#!/bin/sh python
+#!/usr/bin/bash
 #
 # This is an example of how to use TreeFix to correct a tree topology.
 #
