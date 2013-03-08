@@ -1,6 +1,6 @@
 TreeFix
 http://compbio.mit.edu/treefix/
-Yi-Chieh Wu
+Yi-Chieh Wu, with libraries contributed from Matthew Rasmussen
 
 =============================================================================
 ABOUT
