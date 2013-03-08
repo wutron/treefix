@@ -9,8 +9,8 @@ TreeFix is a phylogenetic program that improves existing gene trees using
 the species tree.
 
 TreeFix citation: 
-Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed 
-gene tree error correction using species trees.
+Wu, Rasmussen, Bansal, Kellis. TreeFix: Statistically Informed 
+Gene Tree Error Correction Using Species Trees.
 Systematic Biology (62)1:110-120, 2013.
 
 
