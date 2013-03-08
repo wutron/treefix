@@ -10,7 +10,8 @@ the species tree.
 
 TreeFix citation: 
 Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed 
-gene tree error correction using species trees. Systematic Biology. Accepted.
+gene tree error correction using species trees.
+Systematic Biology (62)1:110-120, 2013.
 
 
 
@@ -18,7 +19,7 @@ By default, TreeFix uses p-values based on the SH test statistic,
 as computed by RAxML.  If you use this default, please also cite
 
 Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses 
-with Thousands of Taxa and Mixed Models. Bioinformatics 22(21):2688-2690, 2006
+with Thousands of Taxa and Mixed Models. Bioinformatics, 22(21):2688-2690, 2006
 
 The original RAxML source code (v7.0.4) is written by Alexandros Stamatakis
 and available at http://sco.h-its.org/exelixis/software.html.
