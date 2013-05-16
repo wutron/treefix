@@ -1,2 +1,5 @@
 - Check for rooted, binary trees as input
 - Check that # seqs == # leaves in input gene tree
+- Make default to accept better trees
+  (And add option to accept only statistically equiv trees)
+  better tree means currentLH > bestLH, equiv to Dlnl < 0

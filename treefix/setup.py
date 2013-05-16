@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.realpath(
 import treefix
 VERSION = treefix.PROGRAM_VERSION_TEXT
 
-extra_link_args = []
+extra_link_args = ['-lm']
 if sys.platform != 'darwin':
     extra_link_args.append('-s')
 
