@@ -132,6 +132,10 @@ def parse_args():
                           metavar="<fraction reconroot>",
                           default=0.05, type="float",
                           help="fraction of search proposals to reconroot (default: 0.05)")
+    grp_search.add_option("--maxtime", dest="maxtime",
+                          metavar="<maximum runtime>",
+                          type="int",
+                          help="maximum runtime (per tree) in seconds")
     parser.add_option_group(grp_search)
 
     grp_info = optparse.OptionGroup(parser, "Information")
@@ -158,12 +162,17 @@ def parse_args():
     parser.add_option_group(grp_debug)
 
     options, args = parser.parse_args()
-    if not options.input and len(args) == 0:
-        parser.print_help()
-	sys.exit(1)
+##    if not options.input and len(args) == 0:
+##        parser.print_help()
+##	return 1
 
     #=============================
     # check arguments
+
+    # input gene tree files
+    treefiles = common.get_input_files(parser, options, args)
+    if len(treefiles) == 0:
+        parser.error("must specify input file(s)")
 
     # required options
     common.check_req_options(parser, options, clade=False)
@@ -196,10 +205,8 @@ def parse_args():
     if options.freconroot < 0 or options.freconroot > 1:
         parser.error("--freconroot must be in [0,1]: %d" % options.freconroot)
 
-    # input gene tree files
-    treefiles = common.get_input_files(parser, options, args)
-    if len(treefiles) == 0:
-        parser.error("must specify input file(s)")
+    if options.reroot:
+        print >>sys.stderr("-r/--reroot is deprecated (gene trees are automatically rerooted)")
 
     return options, treefiles
 
@@ -238,7 +245,7 @@ def log_tree(gtree, log, oneline=True, writeDists=False):
             treelib.draw_tree(gtree, out=treeout, minlen=5, maxlen=5)
         log.log("tree:\n %s\n" % treeout.getvalue())
     treeout.close()
-
+    
 #==========================================================
 # phylogeny functions
 
@@ -286,7 +293,7 @@ def check_small_tree(gtree, rooted=False):
     return False
 
 def check_input_tree(gtree, stree, gene2species, smodule):
-    """check the input gene tree"""
+    """check if input gene tree achieved minimum cost"""
 
     # global variables
     global options
@@ -299,20 +306,10 @@ def check_input_tree(gtree, stree, gene2species, smodule):
     if options.verbose >= 1:
         log.start("Checking input gene tree cost"); log.log("")
 
-    # initialize cost module
-    if options.verbose >= 1: log.start("Optimizing cost model")
-    smodule.optimize_model(gtree, stree, gene2species)
-    if options.verbose >= 1: log.stop(); log.log("")
-
-    # reroot (if desired) and log
-    if options.reroot:
-        gtimer.start()
-        gtree, cost = smodule.recon_root(gtree, newCopy=True, returnCost=True)
-        runtime_reconroot += gtimer.stop()
-    else:
-        gtimer.start()
-        cost = smodule.compute_cost(gtree)
-        runtime_cost += gtimer.stop()
+    # compute cost
+    gtimer.start()
+    cost = smodule.compute_cost(gtree)
+    runtime_cost += gtimer.stop()
 
     # input gene tree achieved minimum cost?
     if cost == smodule.mincost:
@@ -332,7 +329,7 @@ def check_input_tree(gtree, stree, gene2species, smodule):
 
 def check_congruent_tree(gtree, stree, gene2species,
                          module, smodule):
-    """check the congruent gene tree"""
+    """check if congruent gene tree achieved minimum cost"""
 
     # global variables
     global options
@@ -420,7 +417,7 @@ def search_landscape(gtree, stree, gene2species, aln,
     if options.verbose >= 1:
         global log
     global DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
-    global gtimer, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
+    global gtimer, runtime_start, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
     global treehash0, usertree
     if options.usertreeext:
         global usertreehash, usertreehash_rooted, usertreehash_unrooted, \
@@ -440,16 +437,11 @@ def search_landscape(gtree, stree, gene2species, aln,
     if options.verbose >= 1: log.start("Optimizing cost model")
     smodule.optimize_model(gtree, stree, gene2species)
     if options.verbose >= 1: log.stop(); log.log("")
-    
-    # reroot initial tree (if desired) and log
-    if options.reroot:
-        gtimer.start()
-        gtree, cost0 = smodule.recon_root(gtree, newCopy=False, returnCost=True)
-        runtime_reconroot += gtimer.stop()
-    else:
-        gtimer.start()
-        cost0 = smodule.compute_cost(gtree)
-        runtime_cost += gtimer.stop()
+
+    # log
+    gtimer.start()
+    cost0 = smodule.compute_cost(gtree)
+    runtime_cost += gtimer.stop()
     
     # special case: check for one-to-one mapping and if congruent gene tree achieves minimum cost
     flag, mintree = check_congruent_tree(gtree, stree, gene2species,
@@ -483,7 +475,7 @@ def search_landscape(gtree, stree, gene2species, aln,
     
     # initialize min values
     mintree, mincost, minpval, minDlnl = tree0, cost0, 1, 0
-        
+    
     # search functions
     search = phylo.TreeSearchMix(gtree)
     search.add_proposer(phylo.TreeSearchNni(gtree), 0.5)
@@ -494,6 +486,12 @@ def search_landscape(gtree, stree, gene2species, aln,
     nproposals = 0; nuniques = 0; npools = 0; nemptypools = 0
     ndiffrecon = 0; nrecon = 0
     for i in xrange(options.niter):             # outer search
+        # end early if maxtime reached
+        if (options.maxtime is not None) and (timer.time.time() - runtime_start > options.maxtime):
+            if options.verbose >= 1:
+                log.log("search: break (maxtime reached)\n")
+            break
+        
         # store initial search tree
         if rooted:
             treehash1 = phylo.hash_tree(search.tree)
@@ -683,7 +681,7 @@ def search_landscape(gtree, stree, gene2species, aln,
         # end early if tree with minimum cost found
         if (smodule.mincost != -util.INF) and (mincost == smodule.mincost):
             if options.verbose >= 1:
-                log.log("search: break\n")
+                log.log("search: break (mincost reached)\n")
             break
 
     # has the tree changed?
@@ -748,7 +746,7 @@ def main():
     # global variables
     global options, seed
     global DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
-    global gtimer, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
+    global gtimer, runtime_start, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
     global treehash0, usertree
    
     # parse arguments
@@ -778,9 +776,19 @@ def main():
         exec "import %s" % folder in locals()
     smodule = eval("%s(options.sextra)" % options.smodule)
    
-    # read species tree and species map
-    stree = treelib.read_tree(options.stree)
-    gene2species = phylo.read_gene2species(options.smap)
+    # read species tree
+    try:
+        stree = treelib.read_tree(options.stree)
+    except:
+        print >>sys.stderr, "ERROR: problem reading species tree: \"%s\"" % options.stree
+        return 1
+
+    # read species map
+    try:
+        gene2species = phylo.read_gene2species(options.smap)
+    except:
+        print >>sys.stderr, "ERROR: problem reading species map: \"%s\"" % options.smap
+        return 1
 
     # log file
     if options.verbose >= 1:
@@ -817,6 +825,13 @@ def main():
         if NUMPY:
             nprnd.seed(seed)
 
+        # runtime statistics
+        runtime_start = timer.time.time()
+        runtime_prop = 0
+        runtime_reconroot = 0
+        runtime_cost = 0
+        runtime_stat = 0
+
         # start log
         if options.verbose >= 1:
             log.start("Working on file '%s'" % treefile)
@@ -827,17 +842,31 @@ def main():
         outfile = util.replace_ext(treefile, options.oldext, options.newext)
 
         # read input tree
-        gtrees = treelib.read_trees(treefile)
+        try:
+            gtrees = treelib.read_trees(treefile)
+        except:
+            print >>sys.stderr, "ERROR: problem reading gene tree: \"%s\"" % treefile
+            return 1
         if len(gtrees) != 1:
             print >>sys.stderr, "ERROR: treefile contains multiple trees: %s" % treefile
             return 1
         gtree = gtrees[0]
 
-        # runtime statistics
-        runtime_prop = 0
-        runtime_reconroot = 0
-        runtime_cost = 0
-        runtime_stat = 0
+        # remove bootstraps and dists if present
+        for node in gtree:
+            node.dist = 0
+            if "boot" in node.data:
+                del node.data["boot"]
+        if "boot" in gtree.default_data:
+            del gtree.default_data["boot"]
+
+        # optimize cost module
+        if options.verbose >= 1: log.start("Optimizing cost model")
+        smodule.optimize_model(gtree, stree, gene2species)
+        if options.verbose >= 1: log.stop(); log.log("")
+
+        # reroot input tree
+        gtree = smodule.recon_root(gtree, newCopy=False)
 
         # special cases -- no need to search
         #   small gene tree
@@ -858,16 +887,15 @@ def main():
             # skip rest of algorithm
             continue
 
-        # remove bootstraps and dists if present
-        for node in gtree:
-            node.dist = 0
-            if "boot" in node.data:
-                del node.data["boot"]
-        if "boot" in gtree.default_data:
-            del gtree.default_data["boot"]
-
         # read alignment
-        aln = alignlib.fasta.read_fasta(alnfile)
+        try:
+            aln = alignlib.fasta.read_fasta(alnfile)
+        except:
+            print >>sys.stderr, "ERROR: problem reading alignment: \"%s\"" % alnfile
+            return 1
+        if set(aln) != set(gtree.leaf_names()):
+            print >>sys.stderr, "ERROR: gene tree and alignment contain different genes"
+            return 1
         alnlen = len(aln.values()[0])
 
         # read user tree
@@ -904,7 +932,13 @@ def main():
             out = util.open_stream(boottreefile, "w")
 
         # main algorithm
-        for bootnum in xrange(options.nboot):       # bootstrap search           
+        for bootnum in xrange(options.nboot):       # bootstrap search
+            # end early if maxtime reached
+            if (options.maxtime is not None) and (timer.time.time() - runtime_start > options.maxtime):
+                if options.verbose >= 1:
+                    log.log("boot: break (maxtime reached)\n")
+                break
+        
             # get bootstrapped alignment (equal number of columns, sample with replacement)
             if boot:
                 if options.verbose >= 1:
@@ -972,4 +1006,4 @@ def main():
 
 # main function
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

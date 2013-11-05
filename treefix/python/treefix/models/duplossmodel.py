@@ -21,7 +21,7 @@ class DupLossModel(CostModel):
         """Initializes the model"""
         CostModel.__init__(self, extra)
 
-        self.VERSION = "1.0.0"
+        self.VERSION = "1.0.1"
         self.mincost = 0
 
         parser = optparse.OptionParser(prog="DupLossModel")
@@ -45,6 +45,16 @@ class DupLossModel(CostModel):
             self.parser.error("-D/--dupcost must be >= 0")
         if self.losscost < 0:
             self.parser.error("-L/--losscost must be >= 0")
+
+        # ensure gtree and stree are both rooted and binary
+        if (not treelib.is_rooted(gtree)) and (not treelib.is_binary(gtree)):
+            raise Exception("gene tree must be rooted and binary")
+        if (not treelib.is_rooted(stree)) and (not treelib.is_binary(stree)):
+            raise Exception("species tree must be rooted and binary")
+        try:
+            junk = phylo.reconcile(gtree, stree, gene2species)
+        except:
+            raise Exception("problem mapping gene tree to species tree")
         
     def recon_root(self, gtree, newCopy=True, returnCost=False):
         """Reroots the tree by minimizing the duplication/loss cost"""

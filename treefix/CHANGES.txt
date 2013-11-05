@@ -1,6 +1,13 @@
 TreeFix Change Log
 -----------------------
 
+treefix-1.1.8 (2013/11/05)
+-----------------------
+-- added input checks (rooted, binary trees; matching alignment, gene tree, species tree, species map)
+-- added --maxtime parameter for search
+-- added tree-annotate script for event/homolog inference
+
+
 treefix-1.1.7 (2012/12/14)
 -----------------------
 - simplified version control

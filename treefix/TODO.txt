@@ -1,5 +1,6 @@
-- Check for rooted, binary trees as input
-- Check that # seqs == # leaves in input gene tree
+- Check for rooted, binary trees as input -- DONE (v1.1.8)
+- Check that seqs in alignment match leaves in input gene tree -- DONE (v1.1.8)
 - Make default to accept better trees
   (And add option to accept only statistically equiv trees)
   better tree means currentLH > bestLH, equiv to Dlnl < 0
+- Add error message if user does not input a tree to correct -- DONE (v1.1.8)

@@ -33,78 +33,14 @@ modified RAxML source code, and several library interfaces for Python.
 =============================================================================
 USAGE
 
-Running treefix with no arguments will print out its command-line usage:
+Running 'treefix -h' will print out its command-line usage:
 
-Usage: treefix [options] <gene tree> ...
 
-Options:
-  Input/Output:
-    -i <input file>, --input=<input file>
-                        list of input files, one per line
-    -r, --reroot        set to reroot the input tree
-    -s <species tree>, --stree=<species tree>
-                        species tree file in newick format
-    -S <species map>, --smap=<species map>
-                        gene to species map
-    -A <alignment file extension>, --alignext=<alignment file extension>
-                        alignment file extension (default: ".align")
-    -U <user tree file extension>, --usertreeext=<user tree file extension>
-                        check if user tree is visited in search
-    -o <old tree file extension>, --oldext=<old tree file extension>
-                        old tree file extension (default: ".tree")
-    -n <new tree file extension>, --newext=<new tree file extension>
-                        new tree file extension (default: ".treefix.tree")
-    -B <bootstrap trees file extension>, --boottreeext=<bootstrap trees file extension>
-                        bootstrap trees file extension (default:
-                        ".treefix.boot.trees")
+#=============================================================================
+# File formats
 
-  Likelihood Model:
-    -m <module for likelihood calculations>, --module=<module for likelihood calculations>
-                        module for likelihood calculations (default:
-                        "treefix.models.raxmlmodel.RAxMLModel")
-    -e <extra arguments to module>, --extra=<extra arguments to module>
-                        extra arguments to pass to program
+TreeFix expects trees to be in newick format and alignments in fasta format.
 
-  Likelihood Test:
-    -t <test statistic>, --test=<test statistic>
-                        test statistic for likelihood equivalence (default:
-                        "SH")
-    --alpha=<alpha>     alpha threshold (default: 0.05)
-    -p <alpha>, --pval=<alpha>
-                        same as --alpha
-
-  Species Tree Cost Model:
-    -M <module for species tree aware cost calculations>, --smodule=<module for species tree aware cost calculations>
-                        module for species tree aware cost calculations
-                        (default: "treefix.models.duplossmodel.DupLossModel")
-    -E <extra arguments to module>, --sextra=<extra arguments to module>
-                        extra arguments to pass to program
-
-  Search Options:
-    -b <# bootstraps>, --boot=<# bootstraps>
-                        number of bootstraps to perform (default: 1)
-    --seed=<seed>       seed value for random generator
-    --niter=<# iterations>
-                        number of iterations (default: 100)
-    --nquickiter=<# quick iterations>
-                        number of subproposals (default: 50)
-    --freconroot=<fraction reconroot>
-                        fraction of search proposals to reconroot (default:
-                        0.05)
-
-  Information:
-    --version           show program's version number and exit
-    -h, --help          show this help message and exit
-    -V <verbosity level>, --verbose=<verbosity level>
-                        verbosity level (0=quiet, 1=low, 2=medium, 3=high)
-    -l <log file>, --log=<log file>
-                        log filename.  Use '-' to display on stdout.
-
-  Debug:
-    --debug=<debug mode>
-                        debug mode (octal: 0=normal, 1=skips likelihood test,
-                        2=skips cost filtering on pool, 4=computes likelihood
-                        for all trees in pool)
 
 #=============================================================================
 # Likelihood Test and Species Tree Aware Cost Functions

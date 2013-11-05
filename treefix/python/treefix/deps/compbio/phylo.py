@@ -244,7 +244,9 @@ def find_loss_under_node(node, recon):
 
 def find_loss(gtree, stree, recon, node=None):
     """Returns a list of gene losses in a gene tree
-       TODO: generalize to non-MPR recon
+    
+    TODO: generalize to non-MPR recon
+          (in particular, to handle duplication followed immediately by loss)
     """
     loss = []
 
@@ -272,7 +274,9 @@ def find_loss(gtree, stree, recon, node=None):
 
 def count_dup(gtree, events, node=None):
     """Returns the number of duplications in a gene tree
-       TODO: generalize to non-MPR events
+    
+    TODO: generalize to non-MPR events
+          (in particular, to handle duplication followed immediately by loss)
     """
     var = {"dups": 0}
     
@@ -486,6 +490,7 @@ def init_dup_loss_tree(stree):
 def count_dup_loss_tree(tree, stree, gene2species, recon=None, events=None):
     """count dup loss
        TODO: generalize to non-MPR recon/events
+             (in particular, to handle duplication followed immediately by loss)
     """
 
     if recon is None:
@@ -1238,21 +1243,36 @@ def add_spec_node(node, snode, tree, recon, events):
 
     return newnode
 
-def remove_spec_node(node, tree):
+def remove_spec_node(node, tree, recon=None, events=None):
     """
     removes speciation node 'node' from gene tree 'tree'
 
     Modifies recon and events accordingly
     """
     assert len(node.children) == 1
-    
-    # remove node from tree
-    tree.add_child(node.parent, node.children[0])
+    parent = node.parent
+    child = node.children[0]
+
+    # remove node from tree - handle root node specially
+    if parent is None:
+	tree.root = child
+##	tree.remove_child(node, tree.root)
+	tree.root.parent = None
+	node.children = []
+    else:
+##        tree.add_child(parent, child)
+        nodei = parent.children.index(node)
+        parent.children[nodei] = child
+        child.parent = parent
+        node.parent = None
+        node.children = []
     tree.remove(node)
     
     # remove recon and events info
-    del recon[node]
-    del events[node]
+    if recon:
+        del recon[node]
+    if events:
+        del events[node]
 
 
 def add_implied_spec_nodes(tree, stree, recon, events):
@@ -1277,7 +1297,7 @@ def add_implied_spec_nodes(tree, stree, recon, events):
             recon[tree.root] = stree.root
             events[tree.root] = "spec"
             added_nodes.append(tree.root)
-
+	
         # determine starting and ending species
         sstart = recon[node]
         send = recon[node.parent]
@@ -1305,12 +1325,12 @@ def add_implied_spec_nodes(tree, stree, recon, events):
     return added_nodes
 
 
-def remove_implied_spec_nodes(tree, added_nodes):
+def remove_implied_spec_nodes(tree, added_nodes, recon=None, events=None):
     """
     removes speciation nodes from tree
     """
     for node in added_nodes:
-        remove_spec_node(tree, node)
+        remove_spec_node(node, tree, recon, events)
 
 
 #=============================================================================
@@ -1520,6 +1540,8 @@ def perform_spr(tree, subtree, newpos):
         3. tree is binary
 
 """
+    # TODO: check requirements
+    
     a = subtree
     e = newpos
 
@@ -1592,6 +1614,8 @@ def propose_random_spr(tree):
        b (sibling of a)
     3. tree is binary
     """
+    
+    # TODO: check requirements
 
     assert len(tree.nodes) >= 5, "Tree is too small"
 

@@ -18,7 +18,9 @@ exclude = ["examples/getexample\.sh", "examples/testmodels\.sh",
            "python/treefix/[^/]*\.py",
            "python/treefix/models/.*"]
 
-include = ["bin/treefix", "bin/treefix_compute",
+include = ["bin/treefix",
+           "bin/treefix_compute",
+           "bin/tree-annotate",
            "python/treefix/__init__.py",
            "python/treefix/common.py",
            "python/treefix/models/__init__.py",

@@ -58,6 +58,8 @@ setup(
 	      'treefix_raxml.deps.rasmus', 'treefix_raxml.deps.rasmus.ply',
 	      'treefix_raxml.deps.compbio'],
     py_modules=[],
-    scripts=['bin/treefix', 'bin/treefix_compute'],
+    scripts=['bin/treefix',
+             'bin/treefix_compute',
+             'bin/tree-annotate'],
     ext_modules=[raxml_module]
     )
