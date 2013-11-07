@@ -33,7 +33,7 @@ modified RAxML source code, and several library interfaces for Python.
 =============================================================================
 USAGE
 
-Running 'treefix -h' will print out its command-line usage:
+Running 'treefix -h' will print out its command-line usage.
 
 
 #=============================================================================
