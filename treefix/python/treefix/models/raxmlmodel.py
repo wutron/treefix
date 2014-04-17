@@ -22,12 +22,12 @@ from compbio import phylip
 
 class RAxMLModel(StatModel):
     """Computes test statistics using RAxML site-wise likelihoods"""
-    
+
     def __init__(self, extra):
         """Initializes the RAxML model"""
         StatModel.__init__(self, extra)
 
-        self.VERSION = "0.2.3"
+        self.VERSION = "0.2.4"
         self._raxml = raxml.RAxML()
         self.rooted = self._raxml.rooted
 
@@ -51,7 +51,7 @@ class RAxMLModel(StatModel):
     def optimize_model(self, gtree, aln):
         """Optimizes the RAxML model"""
         StatModel.optimize_model(self, gtree, aln)
-        
+
         fd, treefile = tempfile.mkstemp('.tree')
         os.close(fd)
         gtree.write(treefile)
@@ -61,14 +61,13 @@ class RAxMLModel(StatModel):
         out = util.open_stream(seqfile, "w")
         phylip.write_phylip_align(out, aln, strip_names=False)
         out.close()
-        
+
         self._raxml.optimize_model(treefile, seqfile,
                                    "-m %s -e %s -n test" % (self.model, self.eps))
 
         os.remove(treefile)
         os.remove(seqfile)
         
-    def compute_lik_test(self, gtree, stat="SH"):
-        """Computes the test statistic 'stat' using RAxML ikelihoods"""
-        # use report="under" to determine if gtree is statistically worse (i.e. LH{gtree} < LH{optimal})
-        return self._raxml.compute_lik_test(gtree, stat, report="both")
+    def compute_lik_test(self, gtree, stat="SH", alternative=None):
+        """Computes the test statistic 'stat' using RAxML likelihoods"""
+        return self._raxml.compute_lik_test(gtree, stat, alternative)

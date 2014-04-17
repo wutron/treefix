@@ -1,10 +1,10 @@
 #
-# Python module for RAXML library
+# Python module for RAxML library
 #
 
 import sys,os
 
-# import RAXML SWIG module
+# import RAxML SWIG module
 import raxml
 
 # load rasmus libraries if available
@@ -55,7 +55,7 @@ class RAxML:
 
     #=========================================
     # utilities
-    
+
     def read_tree(self, tree):
         """Read treelib tree to raxml tr"""
         r,w = os.pipe()
@@ -63,9 +63,9 @@ class RAxML:
 
         tree.write(fw, oneline=True); fw.write('\n')
         fw.close()
-
+        
         raxml.read_tree(fr, self.tr, self.adef)
-        fr.close()    
+        fr.close()
 
     def draw_raxml_tree(self, *args, **kargs):
         """Draw raxml tr -- adef and tr must have been previously defined"""
@@ -75,9 +75,9 @@ class RAxML:
 
     #=========================================
     # model optimization
-    
+
     def optimize_model(self, treefile, seqfile, extra="-m GTRGAMMA -n test"):
-        """Optimizes the RAXML model"""
+        """Optimizes the RAxML model"""
 
         # initialize parameters based on input
         cmd = "raxmlHPC -t %s -s %s %s" %\
@@ -97,14 +97,9 @@ class RAxML:
 
     #=========================================    
     # test statistics
-    
-    def compute_lik_test(self, tree, test="SH", report="both"):
-        """
-        Computes the test statistic, returning the pvalue and Dlnl
-        report -- "under":  one-sided test, i.e. H0: LH_{tree} > LH_{optimal} v H1: LH_{tree} < LH_{optimal}
-                  "over": one-sided test, i.e. H0: LH_{tree} < LH_{optimal} v H1: LH_{tree} > LH_{optimal}
-                  "both":  two-sided test, i.e. H0: LH_{tree} == LH_{optimal} v H1: LH_{tree} != LH_{optimal}
-        """
+
+    def compute_lik_test(self, tree, test="SH", alternative=None):
+        """Computes the test statistic, returning the pvalue and Dlnl"""
         ##use scipy.stats to determine whether zscore is significant
         ##sf = 1 - cdf, zprob = cdf
         ##>>> stats.norm.sf(2)*2      # two-sided
@@ -115,7 +110,7 @@ class RAxML:
         ##0.97724986805182079
         ##>>> stats.norm.cdf(2)
         ##0.97724986805182079
-        
+
         if test == "SH":
             if not self.optimal:
                 raise Exception("The model is not optimized: call optimize_model.\n")
@@ -124,19 +119,28 @@ class RAxML:
             zscore, Dlnl = raxml.compute_LH(self.adef, self.tr,
                                             self.best_LH, self.weight_sum, self.best_vector)
 
-            # really should just use pval = sf(zscore) if one of the trees is the ML tree,
-            # but SH test compares two a priori trees (to determine if T_x and T_y
-            # are equally good explanations of the data), so raxml uses two-sided test
-            if report == "under":
+            # note that RAxML uses a one-sided comparison with a two-sided threshold
+            # that is, it determines whether z>z_thr, where z_thr corresponds to a significance level of alpha/2
+            # this is equivalent to testing sf(zscore)*2
+            pval = sf(zscore)
+            """
+            # old code
+            if alternative == "under":
+                # one-sided test, i.e. H0: LH_{tree} > LH_{optimal} v H1: LH_{tree} < LH_{optimal}
                 # high zscore => low pval => statistically worse tree
-                return sf(zscore), Dlnl
-            elif report == "over":
+                pval = sf(zscore)
+            elif alternative == "over":
+                # one-sided test, i.e. H0: LH_{tree} < LH_{optimal} v H1: LH_{tree} > LH_{optimal}
                 # low zscore => low pval => statistically better tree
-                return 1-sf(zscore), Dlnl
-            elif report == "both":
+                pval = 1-sf(zscore)
+            elif alternative == "both":
+                # two-sided test, i.e. H0: LH_{tree} == LH_{optimal} v H1: LH_{tree} != LH_{optimal}
                 # high abs(zscore) => low pval => statistically nonequivalent tree
-                return sf(abs(zscore))*2, Dlnl
+                pval = sf(abs(zscore))*2
             else:
-                raise Exception("report must be 'over', 'under', or 'both': %s" % report)
+                raise Exception("SH test, invalid alterntive: %s" % alternative)
+            """
+        else:
+            raise Exception("%s test statistic not implemented" % test)
 
-        raise Exception("%s test statistic not implemented" % test)
+        return pval, Dlnl

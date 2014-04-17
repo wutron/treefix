@@ -9,7 +9,7 @@ from compbio import phylo
 class Model(object):
     def __init__(self, extra):
         self.VERSION = "-"
-    
+
     def __del__(self):
         """Cleans up the model"""
 
@@ -43,10 +43,12 @@ class StatModel(Model):
         """Optimizes the underlying model in the module given the tree and seq (alignment)"""
         pass
 
-    def compute_lik_test(self, gtree, stat):
+    def compute_lik_test(self, gtree, stat, alternative=None):
         """
-        Computes the test statistic for tree likelihood equivalence.
+        Computes the test statistic for tree likelihood equivalence
+        
         Returns the p-value and Dlnl (delta lnl = best lnl - current lnl).
+        Some test statistics require the user to specify the alternative hypothesis.
         """
         raise
        
