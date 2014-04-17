@@ -37,10 +37,10 @@ class DTLModel(CostModel):
         self.mincost = 0
 
         parser = optparse.OptionParser(prog="DTLModel")
-	parser.add_option("--cmd", dest="cmd",
-	                  metavar="<ranger-dtl-U command>",
-	                  default="ranger-dtl-U",
-			  help="ranger-dtl-U command (default: \"ranger-dtl-U\")")
+        parser.add_option("--cmd", dest="cmd",
+                          metavar="<ranger-dtl-U command>",
+                          default="ranger-dtl-U",
+                          help="ranger-dtl-U command (default: \"ranger-dtl-U\")")
         parser.add_option("-D", "--dupcost", dest="dupcost",
                           metavar="<duplication cost>",
                           default=2, type="int",
@@ -54,14 +54,14 @@ class DTLModel(CostModel):
                           default=1, type="int",
                           help="loss cost, integer only (default: 1)")
         parser.add_option("--seed", dest="seed",
-	                  metavar="<seed>",
-			  type="int",
-			  help="user defined random number generator seed")
+                          metavar="<seed>",
+                          type="int",
+                          help="user defined random number generator seed")
         parser.add_option("--tmp", dest="tmp",
                           metavar="<tmp directory>",
                           help="directory for temporary files (must exist)")
-                          
-	self.parser = parser
+
+        self.parser = parser
 
         CostModel._parse_args(self, extra)
 
@@ -139,16 +139,16 @@ class DTLModel(CostModel):
         treeout.close()
 
         # create command
-	args = [self.cmd,
-	        '-i', self.treefile,
-		'-D', str(self.dupcost),
-		'-T', str(self.transcost),
-		'-L', str(self.losscost)]
-	if self.seed:
-	    args.extend(['--seed', str(self.seed)])
-	
-	# execute command
-	try:
+        args = [self.cmd,
+                '-i', self.treefile,
+                '-D', str(self.dupcost),
+                '-T', str(self.transcost),
+                '-L', str(self.losscost)]
+        if self.seed:
+            args.extend(['--seed', str(self.seed)])
+
+        # execute command
+        try:
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT,

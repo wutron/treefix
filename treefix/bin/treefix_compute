@@ -18,10 +18,10 @@ parser = optparse.OptionParser(usage=usage)
 
 # main inputs
 grp_io = optparse.OptionGroup(parser, "Input/Output")
-common.add_common_options(grp_io, 
+common.add_common_options(grp_io,
                           infiles=True, reroot=True,
-			  stree=True, smap=True,
-			  alignext=True)
+                          stree=True, smap=True,
+                          alignext=True)
 grp_io.add_option("-U", "--usertreeext", dest="usertreeext",
                   metavar="<user tree file extension>",
                   help="user tree used for optimizing model (default: input tree)")
@@ -130,7 +130,7 @@ for treefile in treefiles:
     # setup files
     if options.type == "likelihood":
         alnfile = util.replace_ext(treefile, options.oldext, options.alignext)
-	aln = alignlib.fasta.read_fasta(alnfile)
+        aln = alignlib.fasta.read_fasta(alnfile)
     outfile = util.replace_ext(treefile, options.oldext, options.newext)
     out = util.open_stream(outfile, "w")
 
@@ -158,8 +158,8 @@ for treefile in treefiles:
             node.dist = 0
             if "boot" in node.data:
                 del node.data["boot"]
-	if "boot" in gtree.default_data:
-	    del gtree.default_data["boot"]
+        if "boot" in gtree.default_data:
+            del gtree.default_data["boot"]
         
         # compute likelihood or cost
         if options.type == "likelihood":
@@ -169,7 +169,6 @@ for treefile in treefiles:
                
         elif options.type == "cost":
 
-            # compute cost
             if options.reroot:
                 tree, cost = module.recon_root(gtree, newCopy=False, returnCost=True)
             else:

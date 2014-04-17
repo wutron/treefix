@@ -65,15 +65,16 @@ void optimize_model(analdef *adef, tree *tr)
     rawdata *rdta = (rawdata *)malloc(sizeof(rawdata));
     cruncheddata *cdta = (cruncheddata *)malloc(sizeof(cruncheddata));
 
-    if(adef->model == M_PROTCAT || adef->model == M_GTRCAT)
+    if(adef->model == M_PROTCAT || adef->model == M_GTRCAT) {
         tr->rateHetModel = CAT;
+    }
     else {
         tr->rateHetModel = GAMMA;
     }
 
     if(adef->useInvariant && adef->likelihoodEpsilon > 0.001)
         adef->likelihoodEpsilon = 0.001;
-	
+
     readData(adef, rdta, cdta, tr);
 
     checkOutgroups(tr, adef);
@@ -81,12 +82,12 @@ void optimize_model(analdef *adef, tree *tr)
     //makeFileNames();
 
     checkSequences(tr, rdta, adef);
-    
+
     makeweights(adef, rdta, cdta, tr);
     makevalues(rdta, cdta, tr, adef);
 
     initModel(tr, rdta, cdta, adef);
-    
+
     // case TREE_EVALUATION -> likelihood test
     getStartingTree(tr, adef);
 
@@ -102,12 +103,12 @@ void optimize_model(analdef *adef, tree *tr)
 double *compute_best_LH(tree *tr, double *bestLH, double *weightSum)
 {
     *bestLH = tr->likelihood;
-    
+
     int i;
     *weightSum = 0.0;
     for(i = 0; i < tr->cdta->endsite; i++)
         *weightSum += (double)(tr->cdta->aliaswgt[i]);
-    
+
     double *bestVector = (double*)malloc(sizeof(double) * tr->cdta->endsite);
     evaluateGenericInitrav(tr, tr->start);
     evaluateGenericVector(tr, tr->start, bestVector);
@@ -124,26 +125,26 @@ void delete_best_vector(double *bestVector)
 %apply double *OUTPUT { double *zscore, double *Dlnl };
 %inline %{
 /* raxml axml.c: computeLHTest */
-void compute_LH(analdef *adef, tree *tr,  
+void compute_LH(analdef *adef, tree *tr,
                 double bestLH, double weightSum, double *bestVector,
                 double *zscore, double *Dlnl)
 {
     double currentLH;
     double *otherVector = (double*)malloc(sizeof(double) * tr->cdta->endsite);
-    
+
     treeEvaluate(tr, 2);
     tr->start = tr->nodep[1];
 
-    evaluateGenericInitrav(tr, tr->start);         
+    evaluateGenericInitrav(tr, tr->start);
 
     currentLH = tr->likelihood;
     if(currentLH > bestLH) {
         //printf("Better tree found at %f\n", currentLH);
         /*exit(1);*/
     }
-    
+
     evaluateGenericVector(tr, tr->start, otherVector);
-						      
+
     {
         int j;
         double temp, wtemp, sum, sum2, sd;
@@ -157,13 +158,13 @@ void compute_LH(analdef *adef, tree *tr,
             sum  += wtemp;
             sum2 += wtemp * temp;
         }
-									            
+
         sd = sqrt( weightSum * (sum2 - sum*sum / weightSum)
-                   / (weightSum - 1) );               
-														        
-        //printf("Tree Likelihood: %f D(LH): %f SD: %f Significantly Worse: %s\n", currentLH, currentLH - bestLH, sd, (sum > 1.95996 * sd) ? "Yes" : " No"); 
+                   / (weightSum - 1) );
+
+        //printf("Tree Likelihood: %f D(LH): %f SD: %f Significantly Worse: %s\n", currentLH, currentLH - bestLH, sd, (sum > 1.95996 * sd) ? "Yes" : " No");
         *zscore = sum/sd;
-	*Dlnl = bestLH - currentLH;
+        *Dlnl = bestLH - currentLH;
     }
 
     free(otherVector);

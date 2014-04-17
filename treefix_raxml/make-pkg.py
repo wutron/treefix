@@ -7,15 +7,15 @@ files = ["src",
 
          "setup.py",
          "README.txt",
-	 "INSTALL.txt",
-	 "LICENSE.txt",
-	 "CHANGES.txt"]
+         "INSTALL.txt",
+         "LICENSE.txt",
+         "CHANGES.txt"]
 
 exclude = [".*\.pyc", ".*\.so",
-	   "python/treefix_raxml/raxml_wrap\.c",
+           "python/treefix_raxml/raxml_wrap\.c",
            "python/treefix_raxml/raxml\.py",
-	   "examples/getexample\.sh",
-	   "examples/test_swig\.py"]
+           "examples/getexample\.sh",
+           "examples/test_swig\.py"]
 
 include = [""]
 

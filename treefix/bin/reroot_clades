@@ -14,8 +14,8 @@ parser = optparse.OptionParser(usage=usage)
 grp_io = optparse.OptionGroup(parser, "Input/Output")
 common.add_common_options(grp_io,
                           infiles=True, reroot=True,
-			  stree=True, smap=True,
-			  clade=True)
+                          stree=True, smap=True,
+                          clade=True)
 grp_io.add_option("-o","--oldext", dest="oldext",
                   metavar="<old tree file extension>",
                   default=".tree",
@@ -134,7 +134,7 @@ for treefile in treefiles:
                 log.log("tree size <= 2 -- reroot skipped")
                 log.stop()
             output_tree(gtree, out, single_tree)
-	    continue
+            continue
 
         # remove bootstraps if present
         for node in gtree:
@@ -160,7 +160,7 @@ for treefile in treefiles:
         phylo.recon_root(gtree, stree, gene2species, newCopy=False)
 
         # output rerooted tree
-	output_tree(gtree, out, single_tree)
+        output_tree(gtree, out, single_tree)
 
     # close output stream
     out.close()

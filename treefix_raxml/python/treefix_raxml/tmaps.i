@@ -11,7 +11,6 @@
 }
 
 
-
 // Python typemaps
 #ifdef SWIGPYTHON
 
@@ -25,15 +24,15 @@
         for (i = 0; i < size; i++) {
             PyObject *o = PyList_GetItem($input,i);
             if (PyString_Check(o))
-	        $1[i] = PyString_AsString(PyList_GetItem($input,i));
-	    else {
-	        PyErr_SetString(PyExc_TypeError,"list must contain strings");
-	    free($1);
-	    return NULL;
+                $1[i] = PyString_AsString(PyList_GetItem($input,i));
+            else {
+                PyErr_SetString(PyExc_TypeError,"list must contain strings");
+                free($1);
+                return NULL;
             }
         }
         $1[i] = 0;
-    } 
+    }
     else {
         PyErr_SetString(PyExc_TypeError,"not a list");
         return NULL;
@@ -50,11 +49,11 @@
         for (i = 0; i < $1; i++) {
             PyObject *o = PyList_GetItem($input,i);
             if (PyString_Check(o))
-	        $2[i] = PyString_AsString(PyList_GetItem($input,i));
+                $2[i] = PyString_AsString(PyList_GetItem($input,i));
             else {
-	        PyErr_SetString(PyExc_TypeError,"list must contain strings");
-	        free($2);
-	        return NULL;
+                PyErr_SetString(PyExc_TypeError,"list must contain strings");
+                free($2);
+                return NULL;
             }
         }
         $2[i] = 0;
@@ -69,7 +68,7 @@
 %typemap(in) FILE * {
     if (!PyFile_Check($input)) {
         PyErr_SetString(PyExc_TypeError, "$1_name must be a file type.");
-	return NULL;
+        return NULL;
     }
     $1 = PyFile_AsFile($input);
 }
@@ -83,8 +82,8 @@
 //int print_args(char **argv) {
 //    int i = 0;
 //    while (argv[i]) {
-//         printf("argv[%d] = %s\n", i,argv[i]);
-//         i++;
+//        printf("argv[%d] = %s\n", i,argv[i]);
+//        i++;
 //    }
 //    return i;
 //}

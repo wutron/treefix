@@ -138,7 +138,7 @@ class RAxML:
                 # high abs(zscore) => low pval => statistically nonequivalent tree
                 pval = sf(abs(zscore))*2
             else:
-                raise Exception("SH test, invalid alterntive: %s" % alternative)
+                raise Exception("SH test, invalid alternative: %s" % alternative)
             """
         else:
             raise Exception("%s test statistic not implemented" % test)

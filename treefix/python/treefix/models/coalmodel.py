@@ -56,7 +56,7 @@ class CoalModel(CostModel):
         edges = []
         for gtree, edge in self._reroot_helper(gtree, newCopy=newCopy, returnEdge=True):
             gtree.write(treeout, namefunc=lambda name: self.gene2species(name),
-	                oneline=True, writeData=lambda x: "")
+                        oneline=True, writeData=lambda x: "")
             treeout.write('\n')
             edges.append(edge)
         treeout.close()
@@ -109,7 +109,7 @@ class CoalModel(CostModel):
         self.stree.write(treeout, oneline=True, writeData=lambda x: "")
         treeout.write('\n')
         gtree.write(treeout, namefunc=lambda name: self.gene2species(name),
-	            oneline=True, writeData=lambda x: "")
+                    oneline=True, writeData=lambda x: "")
         treeout.write('\n')
         treeout.close()
 

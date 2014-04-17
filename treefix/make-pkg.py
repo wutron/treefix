@@ -7,9 +7,9 @@ files = ["src",
 
          "setup.py",
          "README.txt",
-	 "INSTALL.txt",
-	 "LICENSE.txt",
-	 "CHANGES.txt"]
+         "INSTALL.txt",
+         "LICENSE.txt",
+         "CHANGES.txt"]
 
 exclude = ["examples/getexample\.sh", "examples/testmodels\.sh",
            ".*\.linux$", ".*\.pyc$", ".*\.so$",
@@ -25,7 +25,7 @@ include = ["bin/treefix",
            "python/treefix/common.py",
            "python/treefix/models/__init__.py",
            "python/treefix/models/duplossmodel.py",
-	   "python/treefix/models/raxmlmodel.py"]
+           "python/treefix/models/raxmlmodel.py"]
 
 #=============================================================================
 

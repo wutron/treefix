@@ -24,8 +24,8 @@ parser = optparse.OptionParser(usage=usage)
 grp_io = optparse.OptionGroup(parser, "Input/Output")
 common.add_common_options(grp_io, 
                           infiles=True, reroot=True,
-			  stree=True, smap=True,
-			  alignext=True)
+                          stree=True, smap=True,
+                          alignext=True)
 grp_io.add_option("-o","--oldext", dest="oldext",
                   metavar="<old tree file extension>",
                   default=".tree",
@@ -142,27 +142,27 @@ def get_long_branches(gtree, branch_factors):
     children = gtree.root.children
     mymaxbranches = maxbranches
     if not rooted:
-    	# if unrooted, treat children of root as special case (since single branch linking children of root)
+        # if unrooted, treat children of root as special case (since single branch linking children of root)
 
-        # nodes that are not root or children of root 
-    	longbranches = [node.name for (node,kdist) in branch_factors.iteritems() 
-			if kdist >= klong and node != gtree.root and node not in children]
+        # nodes that are not root or children of root
+        longbranches = [node.name for (node,kdist) in branch_factors.iteritems()
+                        if kdist >= klong and node != gtree.root and node not in children]
 
-	# add both children of root if long branch
-	kdist = sum(branch_factors[node] for node in children)
+        # add both children of root if long branch
+        kdist = sum(branch_factors[node] for node in children)
         if kdist >= klong:
-	    longbranches.extend([node.name for node in children])
-	    mymaxbranches += 1	# allow one more branch since this contributes two branches
+            longbranches.extend([node.name for node in children])
+            mymaxbranches += 1  # allow one more branch since this contributes two branches
     else:
-	# nodes that are not root
-	longbranches = [node.name for (node,kdist) in branch_factors.iteritems()
-			if kdist >= klong and node != gtree.root]
+        # nodes that are not root
+        longbranches = [node.name for (node,kdist) in branch_factors.iteritems()
+                        if kdist >= klong and node != gtree.root]
 
-	# if any child of root is a long branch, add the other child so search_tops works for (head, case 2)
-	for node in children:
-	    if node.name in longbranches:
-	        longbranches.extend([node.name for node in children if node.name not in longbranches])
-		break
+        # if any child of root is a long branch, add the other child so search_tops works for (head, case 2)
+        for node in children:
+            if node.name in longbranches:
+                longbranches.extend([node.name for node in children if node.name not in longbranches])
+                break
 
     if options.verbose >= 1: log.log("Found branch factors: %d total, %d long" %\
                                      (len(branch_factors), len(longbranches)))
@@ -170,9 +170,9 @@ def get_long_branches(gtree, branch_factors):
     # keep max # of branches
     if len(longbranches) > mymaxbranches:
         longbranches.sort(key=lambda name: branch_factors[gtree.nodes[name]], reverse=True)
-	longbranches = longbranches[:mymaxbranches]
+        longbranches = longbranches[:mymaxbranches]
         if options.verbose >= 1: log.log("Retained %d longest branches" % mymaxbranches)
-    
+
     # sort in post-order so rerooting does not affect node-branch relationship
     ndx = list(node.name for node in gtree.postorder())
     longbranches.sort(key=lambda name: ndx.index(name))
@@ -201,14 +201,15 @@ def clear_caches():
 # phylogeny functions
 
 def unroot(gtree, newCopy=True):
-   """returns unrooted gtree (with internal root always at the same place)"""
-   
-   if newCopy:
-       gtree = gtree.copy()
-   treelib.unroot(gtree, newCopy=False)
-   treelib.reroot(gtree, gtree.nodes[sorted(gtree.leaf_names())[0]].parent.name,
-                  onBranch=False, newCopy=False)
-   return gtree
+    """returns unrooted gtree (with internal root always at the same place)"""
+
+    if newCopy:
+        gtree = gtree.copy()
+        treelib.unroot(gtree, newCopy=False)
+
+    treelib.reroot(gtree, gtree.nodes[sorted(gtree.leaf_names())[0]].parent.name,
+                   onBranch=False, newCopy=False)
+    return gtree
 
 recon_cache = {}
 def recon_root(gtree, stree, gene2species, newCopy=True, returnCost=False):
@@ -259,7 +260,7 @@ def already_searched(gtree, longbranches, head):
     key = tuple(longbranches) + (head,)
     if treehash in tops_cache:
         if key in tops_cache[treehash]:
-	    return True
+            return True
 
     tops_cache[treehash].add(key)
     return False
@@ -273,7 +274,7 @@ def compute_lik_test(gtree):
 
     treehash = phylo.hash_tree(gtree)
     if treehash in lik_cache:
-	return lik_cache[treehash]
+        return lik_cache[treehash]
 
     pval, Dlnl = eval("%s.compute_lik_test(gtree, options.test)" % options.module)
     lik_cache[treehash] = pval, Dlnl
@@ -373,17 +374,17 @@ def search_tops(gtree, longbranches, head=True, nrearr=0):
     Note that all distances are using the branch lengths in the original tree!
     """
     if already_searched(gtree, longbranches, head):
-	if options.verbose >= 3: log.log("Skipping since this topology has already been searched")
-	raise StopIteration
+        if options.verbose >= 3: log.log("Skipping since this topology has already been searched")
+        raise StopIteration
 
     if len(longbranches) == 0:
-        if nrearr == 0:		# skip original tree
-	    raise StopIteration
+        if nrearr == 0:     # skip original tree
+            raise StopIteration
 
-	if options.verbose >= 3: log.log("No long branches left")
-	
-	yield gtree.copy(), nrearr
-	raise StopIteration
+        if options.verbose >= 3: log.log("No long branches left")
+
+        yield gtree.copy(), nrearr
+        raise StopIteration
 
     node = gtree.nodes[longbranches[0]]
     if options.verbose >= 3: log.start("Search with %d long branches at %s" % (len(longbranches), node.name))
@@ -392,12 +393,12 @@ def search_tops(gtree, longbranches, head=True, nrearr=0):
         # no change
         if options.verbose >= 3: log.log("Working on head of %s" % node.name)
         for obj in search_tops(gtree, longbranches, False, nrearr):
-	    yield obj
+            yield obj
 
         """
-	a = long branch (skip if a is root)
-	
-	Case 1: a is not a child of the root
+        a = long branch (skip if a is root)
+
+        Case 1: a is not a child of the root
               ...
               /
              g
@@ -407,73 +408,73 @@ def search_tops(gtree, longbranches, head=True, nrearr=0):
          a   d
         ... / \
            b   c
-	  ... ...
+          ... ...
         Perform spr of a at (b,c,f,g) if other branch (b,c,f,g) is short.
         If g is root, can skip regraft onto (f,g).
 
-	Case 2: a is a child of the root
-	      e
-	     / \
-	    a   d
-	   ... / \
-	      /   \
-	     b     c
-	    / \   / \
-	   f   g h   i
-	  ... ..... ...
+        Case 2: a is a child of the root
+              e
+             / \
+            a   d
+           ... / \
+              /   \
+             b     c
+            / \   / \
+           f   g h   i
+          ... ..... ...
         Perform reroot of d (with new roots) at (f,g,h,i)
-	-- but we can skip since d was added to longbranches in get_long_branches.
-	"""
-	# find branches to regraft onto
-	nodes = []
-	if node.parent:
-	    if node.parent != gtree.root:	# case 1
-	        dist = node.parent.dist + sum(n.dist for n in node.parent.children if n != node)
-		if dist/avg <= kshort:		# d+e is short
-		    if node.parent.parent != gtree.root:
-		    	# branch g
-		        if node.parent.parent.dist/avg <= kshort:
-			    nodes.append(node.parent.parent) 
-		    
-		        # branch f
-		        for aunt in node.parent.parent.children:
-		            if aunt == node.parent: continue	# skip myself
-		            if aunt.dist/avg <= kshort:
-		                nodes.append(aunt)
+        -- but we can skip since d was added to longbranches in get_long_branches.
+        """
+        # find branches to regraft onto
+        nodes = []
+        if node.parent:
+            if node.parent != gtree.root:       # case 1
+                dist = node.parent.dist + sum(n.dist for n in node.parent.children if n != node)
+                if dist/avg <= kshort:          # d+e is short
+                    if node.parent.parent != gtree.root:
+                        # branch g
+                        if node.parent.parent.dist/avg <= kshort:
+                            nodes.append(node.parent.parent)
 
-		    # branches b,c
-	            for sister in node.parent.children:
-	                if sister == node: continue		# skip myself
+                        # branch f
+                        for aunt in node.parent.parent.children:
+                            if aunt == node.parent: continue    # skip myself
+                            if aunt.dist/avg <= kshort:
+                                nodes.append(aunt)
+
+                    # branches b,c
+                    for sister in node.parent.children:
+                        if sister == node: continue             # skip myself
                         for niece in sister.children:
-		            if niece.dist/avg <= kshort:
-			        nodes.append(niece)
-	    else:	# case 2
-	        pass
+                            if niece.dist/avg <= kshort:
+                                nodes.append(niece)
+            else:   # case 2
+                pass
 
-	# regraft to nearest branches
-	for newpos in nodes:
+        # regraft to nearest branches
+        for newpos in nodes:
             if DEBUG: tree = gtree.copy()
-	    flag, sib = try_spr(gtree, node, newpos)
-	    if flag:
-	        for obj in search_tops(gtree, longbranches, False, nrearr+1):
-		    yield obj
+            flag, sib = try_spr(gtree, node, newpos)
+            if flag:
+                for obj in search_tops(gtree, longbranches, False, nrearr+1):
+                    yield obj
 
-	    # revert spr
-	    phylo.perform_spr(gtree, node, sib)
-	    if DEBUG: assert phylo.hash_tree_names(tree) == phylo.hash_tree_names(gtree)
-	    
+            # revert spr
+            phylo.perform_spr(gtree, node, sib)
+            if DEBUG: assert phylo.hash_tree_names(tree) == phylo.hash_tree_names(gtree)
+
     else:
         # no change
         if options.verbose >= 3: log.log("Working on tail of %s" % node.name)
         for obj in search_tops(gtree, longbranches[1:], True, nrearr):
-	    yield obj
-	
+            yield obj
+
         """
         g = long branch
                ...
                /
               g
-	     / \
+             / \
             /   \
            e     f
           / \   / \
@@ -481,29 +482,29 @@ def search_tops(gtree, longbranches, head=True, nrearr=0):
         ... ..... ...
         Perform reroot of g (with new roots) at (a,b,c,d).
         """
-	# find branches to regraft onto
-	nodes = []
-	dist = sum(child.dist for child in node.children)
-	if dist/avg <= kshort:		# e+f is short
+        # find branches to regraft onto
+        nodes = []
+        dist = sum(child.dist for child in node.children)
+        if dist/avg <= kshort:      # e+f is short
             for child in node.children:
-	        for gchild in child.children:
-		    # branches a,b,c,d
-		    if gchild.dist/avg <= kshort:
-		        nodes.append(gchild)
-	
-	# regraft onto nearest branches
-	for newroot in nodes:
-            if DEBUG: tree = gtree.copy()
-	    flag, root = try_reroot(gtree, node, newroot)
-	    if flag:
-	        for obj in search_tops(gtree, longbranches[1:], True, nrearr+1):
-	            yield obj
+                for gchild in child.children:
+                    # branches a,b,c,d
+                    if gchild.dist/avg <= kshort:
+                        nodes.append(gchild)
 
-	    # revert reroot
-	    subtree = treelib.subtree(gtree, node)
-	    treelib.reroot(subtree, root.name, newCopy=False, keepName=True)
-	    replace_tree(gtree, node, subtree)
-	    if DEBUG: assert phylo.hash_tree_names(tree) == phylo.hash_tree_names(gtree)
+        # regraft onto nearest branches
+        for newroot in nodes:
+            if DEBUG: tree = gtree.copy()
+            flag, root = try_reroot(gtree, node, newroot)
+            if flag:
+                for obj in search_tops(gtree, longbranches[1:], True, nrearr+1):
+                    yield obj
+
+            # revert reroot
+            subtree = treelib.subtree(gtree, node)
+            treelib.reroot(subtree, root.name, newCopy=False, keepName=True)
+            replace_tree(gtree, node, subtree)
+            if DEBUG: assert phylo.hash_tree_names(tree) == phylo.hash_tree_names(gtree)
 
     if options.verbose >= 3: log.stop()
 
@@ -529,7 +530,7 @@ rooted = eval("%s.rooted" % options.module)
 # process genes trees
 for treefile in treefiles:
     if options.verbose >= 1: log.start("Working on file '%s'" % treefile)
-
+    
     # setup files
     alnfile = util.replace_ext(treefile, options.oldext, options.alignext)
     outfile = util.replace_ext(treefile, options.oldext, options.newext)
@@ -544,17 +545,17 @@ for treefile in treefiles:
         
         # special cases: no need to fix topology or no branch lengths
         special = False
-	if len(gtree.leaves()) <= 2 or\
-	   (len(gtree.leaves()) == 3 and not rooted):
-	    special = True
-	    if options.verbose >= 1: log.log("tree size <= 2 or == 3 and unrooted -- search skipped")
-	if sum(node.dist for node in gtree) == 0:
-	    special = True
-	    if options.verbose >= 1: log.log("tree has no distances -- search skipped")
-	if special:   
-	    output_tree(gtree, out, single_tree)
-	    if options.verbose >= 1: log.stop()
-	    continue
+        if len(gtree.leaves()) <= 2 or\
+           (len(gtree.leaves()) == 3 and not rooted):
+            special = True
+            if options.verbose >= 1: log.log("tree size <= 2 or == 3 and unrooted -- search skipped")
+        if sum(node.dist for node in gtree) == 0:
+            special = True
+            if options.verbose >= 1: log.log("tree has no distances -- search skipped")
+        if special:
+            output_tree(gtree, out, single_tree)
+            if options.verbose >= 1: log.stop()
+            continue
 
         # reroot
         if options.reroot:
@@ -568,9 +569,9 @@ for treefile in treefiles:
         longbranches = get_long_branches(gtree, branch_factors)
         if len(longbranches) == 0:
             output_tree(gtree, out, single_tree)
-	    if options.verbose >= 1: log.stop()
-	    continue
-        
+            if options.verbose >= 1: log.stop()
+            continue
+
         # remove bootstraps if present
         for node in gtree:
             if "boot" in node.data:
@@ -584,64 +585,64 @@ for treefile in treefiles:
         
         # search topologies
         treendx, mintree, mincost, minnrearr, minpval, minDlnl = 0, gtree, cost0, 0, None, 0
-        for treendx, (tree, nrearr) in enumerate(search_tops(gtree, longbranches)):	         
-	    # don't trust branch lengths anymore
-	    for node in tree:
-	        node.dist = 0
+        for treendx, (tree, nrearr) in enumerate(search_tops(gtree, longbranches)):
+            # don't trust branch lengths anymore
+            for node in tree:
+                node.dist = 0
 
-	    # do a final reroot if necessary
-	    if not rooted:
-	        tree,cost = recon_root(tree, stree, gene2species, newCopy=False, returnCost=True)
-	    else:
-	        cost = count_dup_loss(tree, stree, gene2species)
+            # do a final reroot if necessary
+            if not rooted:
+                tree,cost = recon_root(tree, stree, gene2species, newCopy=False, returnCost=True)
+            else:
+                cost = count_dup_loss(tree, stree, gene2species)
 
             # check final cost
-	    if (cost >= cost0) or (cost > mincost):
-	        if options.verbose >= 2:
-		    log.log("Skipping topology %d due to cost: cost = %d, cost0 = %d, mincost = %d" %\
-		            (treendx, cost, cost0, mincost))
-		continue
+            if (cost >= cost0) or (cost > mincost):
+                if options.verbose >= 2:
+                    log.log("Skipping topology %d due to cost: cost = %d, cost0 = %d, mincost = %d" %\
+                            (treendx, cost, cost0, mincost))
+                continue
 
             # check likelihood (pval)
-	    pval, Dlnl = compute_lik_test(tree)
-	    if pval < options.pval:	# significantly worse topology
-	        if options.verbose >= 2:
-		    log.log("Skipping topology %d due to likelihood: cost = %d, pval = %f, Dlnl = %f" %\
-		            (treendx, cost, pval, Dlnl))
-		continue
+            pval, Dlnl = compute_lik_test(tree)
+            if pval < options.pval:                     # significantly worse topology
+                if options.verbose >= 2:
+                    log.log("Skipping topology %d due to likelihood: cost = %d, pval = %f, Dlnl = %f" %\
+                            (treendx, cost, pval, Dlnl))
+                continue
 
-	    # use Dlnl if same cost
-	    if (cost == mincost and Dlnl > minDlnl):	# smaller Dlnl is better
-	         if options.verbose >= 2:
-		     log.log("Skipping topology %d due to Dlnl: cost = %d, pval = %f, Dlnl = %f" %\
-		             (treendx, cost, pval, Dlnl))
-		 continue
+            # use Dlnl if same cost
+            if (cost == mincost and Dlnl > minDlnl):    # smaller Dlnl is better
+                if options.verbose >= 2:
+                    log.log("Skipping topology %d due to Dlnl: cost = %d, pval = %f, Dlnl = %f" %\
+                            (treendx, cost, pval, Dlnl))
+                continue
 
-	    # best tree so far
+            # best tree so far
             if options.verbose >= 2:
-	         log.log("Found better topology %d: cost = %d, nrearr = %d, pval = %f, Dlnl = %f" %\
-	                 (treendx, cost, nrearr, pval, Dlnl))
-	         treeout = StringIO.StringIO()
-	         tree.write(treeout, oneline=True)
-	         log.log("%s\n" % treeout.getvalue())
-	         treeout.close()
-            
-	    mintree, mincost, minnrearr, minpval, minDlnl = tree, cost, nrearr, pval, Dlnl
+                log.log("Found better topology %d: cost = %d, nrearr = %d, pval = %f, Dlnl = %f" %\
+                        (treendx, cost, nrearr, pval, Dlnl))
+                treeout = StringIO.StringIO()
+                tree.write(treeout, oneline=True)
+                log.log("%s\n" % treeout.getvalue())
+                treeout.close()
 
-	# cleanup module for tree estimation
+            mintree, mincost, minnrearr, minpval, minDlnl = tree, cost, nrearr, pval, Dlnl
+
+        # cleanup module for tree estimation
         eval("%s.cleanup()" % options.module)
 
         # better tree found?
-	if minnrearr == 0:
+        if minnrearr == 0:
             if options.verbose >= 1: log.log("\nNo better topology found\n\n")
         else:
             # reroot if needed
-	    if not rooted:
-	        phylo.recon_root(mintree, stree, gene2species, newCopy=False)
+            if not rooted:
+                phylo.recon_root(mintree, stree, gene2species, newCopy=False)
 
-	    if options.verbose >= 1:
+            if options.verbose >= 1:
                 log.log("\nBetter topology found: cost = %d, nrearr = %d, pval = %f, Dlnl = %f\n\n" %\
-		        (mincost, minnrearr, minpval, minDlnl))
+                        (mincost, minnrearr, minpval, minDlnl))
                 treeout = StringIO.StringIO()
                 mintree.write(treeout, oneline=True)
                 log.log("%s\n" % treeout.getvalue())
