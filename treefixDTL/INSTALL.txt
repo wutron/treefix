@@ -1,6 +1,6 @@
 TreeFix-DTL
 http://compbio.mit.edu/treefix-dtl/
-Yi-Chieh Wu, 
+Yi-Chieh Wu,
 with libraries contributed by Matthew Rasmussen
 and executables contributed by Mukul Bansal
 
@@ -20,9 +20,9 @@ The following programs are optional:
   If Scipy is not found, the program uses internal libraries to approximate
   the normal distribution (so p-values may be slightly off).
 
-Additionally, Python modules are required for computing (1) p-values for likelihood 
+Additionally, Python modules are required for computing (1) p-values for likelihood
 equivalence and (2) reconciliation costs.  We have provided default modules
-that compute (1) the p-value based on the Shimodaira-Hasegawa (SH) test statistic with 
+that compute (1) the p-value based on the Shimodaira-Hasegawa (SH) test statistic with
 RAxML site-wise likelihoods and (2) the duplication-transfer-loss cost
 using ranger-dtl-U reconciliation.  For other modules, see the website.
 
@@ -58,12 +58,12 @@ Run
 
 python setup_DTL.py install
 
-This installs the files that are specific to TreeFix-DTL or RANGER-DTL.  
+This installs the files that are specific to TreeFix-DTL or RANGER-DTL.
 In particular, it installs the "ranger-dtl-U" and "treefixDTL" executables and
 the "rangerdtlmodel.py" module to their appropriate paths.
 
-If you did not use the default paths, you must also specify the TreeFix installation directory.  
-Using the regular setup.py script will work (as long as you use the same installation directory), 
+If you did not use the default paths, you must also specify the TreeFix installation directory.
+Using the regular setup.py script will work (as long as you use the same installation directory),
 but you will be (unnecessarily) recompiling TreeFix and overwriting any existing ranger-dtl-U executable.
 
 =============================================================================
@@ -73,10 +73,10 @@ Run
 
 python setup_TreeFixDTL.py install
 
-This installs the files that are specific to TreeFix-DTL.  In particular, 
-it installs the "treefixDTL" executable and the "rangerdtlmodel.py" module 
+This installs the files that are specific to TreeFix-DTL.  In particular,
+it installs the "treefixDTL" executable and the "rangerdtlmodel.py" module
 to their appropriate paths.
 
 If you did not use the default paths, you must also specify the TreeFix installation directory.
-Using the regular setup.py script will work (as long as you use the same installation directory), 
+Using the regular setup.py script will work (as long as you use the same installation directory),
 but you will be (unnecessarily) recompiling TreeFix.

@@ -74,7 +74,7 @@ def get_tree_relations(tree, recon, events, loss):
 
         rel = sorted((sorted(child.leaf_names()) for child in node.children),
                      key=relation_format)
-        
+
         if events[node] == "dup":
             yield ["dup"] + rel + [recon[node].name]
         elif events[node] == "spec":
@@ -89,7 +89,7 @@ def relation_format(val):
     if isinstance(val, (list, tuple)):
         return ",".join(relation_format(v) for v in val)
     else:
-        return str(val)           
+        return str(val)
 
 #=============================================================================
 # main
@@ -107,7 +107,7 @@ else:
 for treefile in filenames:
     tree = treelib.read_tree(treefile)
     base = util.replace_ext(treefile, conf.treeext, "")
-    
+
     # check tree
     assert treelib.is_rooted(tree)
 
@@ -143,7 +143,7 @@ for treefile in filenames:
     for rel in get_tree_relations(tree, recon, events, loss):
         print >>out, "\t".join(relation_format(val) for val in rel)
     out.close()
-        
+
     # output orthologs
     out = util.open_stream(base + conf.orthext, 'w')
     orths = phylo.find_orthologs(tree, stree, recon, events,
@@ -151,7 +151,7 @@ for treefile in filenames:
 
     for orth in orths:
         gene1, gene2, spcnt1, spcnt2, snode = orth
-            
+
         sp1 = gene2species(gene1)
         sp2 = gene2species(gene2)
         if sp1 > sp2:
@@ -162,7 +162,7 @@ for treefile in filenames:
         toks = (sp1, sp2, gene1, gene2, spcnt1, spcnt2, snode.name)
         print >>out, "\t".join(map(str, toks))
     out.close()
-        
+
     # output paralogs
     out = util.open_stream(base + conf.paralogext, 'w')
     paralogs = phylo.find_paralogs(tree, stree, recon, events,
@@ -171,7 +171,7 @@ for treefile in filenames:
 
     for paralog in paralogs:
         gene1, gene2, spcnt1, spcnt2, snode = paralog
-            
+
         sp1 = gene2species(gene1)
         sp2 = gene2species(gene2)
         if sp1 > sp2:

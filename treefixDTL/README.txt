@@ -22,7 +22,7 @@ species tree, TreeFix-DTL finds an alternative gene tree topology that
 minimizes the duplication-transfer-loss reconciliation cost while
 still being supported by the sequence data.
 
-TreeFix-DTL citation: 
+TreeFix-DTL citation:
 Bansal*, Wu*, Alm, Kellis. Improving the Accuracy of Gene Tree Reconstruction
 in Prokaryotes: Strategies and Impact. Submitted.
 
@@ -31,7 +31,7 @@ in Prokaryotes: Strategies and Impact. Submitted.
 By default, TreeFix-DTL uses p-values based on the SH test statistic,
 as computed by RAxML.  If you use this default, please also cite
 
-Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses 
+Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses
 with Thousands of Taxa and Mixed Models. Bioinformatics 22(21):2688-2690, 2006
 
 The original RAxML source code (v7.0.4) is written by Alexandros Stamatakis
@@ -116,7 +116,7 @@ Options:
 
   Information:
     --version           show program's version number and exit
-    -h, --help          show this help message and exit    
+    -h, --help          show this help message and exit
     -V <verbosity level>, --verbose=<verbosity level>
                         verbosity level (0=quiet, 1=low, 2=medium, 3=high)
     -l <log file>, --log=<log file>

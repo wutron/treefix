@@ -18,10 +18,10 @@ The following programs are optional:
   If Scipy is not found, the program uses internal libraries to approximate
   the normal distribution (so p-values may be slightly off).
 
-Additionally, Python modules are required for computing (1) p-values for likelihood 
+Additionally, Python modules are required for computing (1) p-values for likelihood
 equivalence and (2) reconciliation costs.  We have provided default modules
-that compute (1) the p-value based on the Shimodaira-Hasegawa (SH) test statistic with 
-RAxML site-wise likelihoods and (2) the duplication-loss cost using maximum parsimony 
+that compute (1) the p-value based on the Shimodaira-Hasegawa (SH) test statistic with
+RAxML site-wise likelihoods and (2) the duplication-loss cost using maximum parsimony
 reconciliation (MPR).  For other modules, see the website.
 
 =============================================================================

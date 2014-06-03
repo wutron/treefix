@@ -100,9 +100,9 @@ class DTLModel(CostModel):
             self.parser.error("-L/--losscost must be >= 0")
 
         # ensure gtree and stree are both rooted and binary
-        if (not treelib.is_rooted(gtree)) and (not treelib.is_binary(gtree)):
+        if not (treelib.is_rooted(gtree) and treelib.is_binary(gtree)):
             raise Exception("gene tree must be rooted and binary")
-        if (not treelib.is_rooted(stree)) and (not treelib.is_binary(stree)):
+        if not (treelib.is_rooted(stree) and treelib.is_binary(stree)):
             raise Exception("species tree must be rooted and binary")
         try:
             junk = phylo.reconcile(gtree, stree, gene2species)
@@ -126,7 +126,7 @@ class DTLModel(CostModel):
         else:
             return gtree
 
-    def compute_cost(self, gtree):   
+    def compute_cost(self, gtree):
         """Returns the DTL cost"""
 
         # write species tree and gene tree using species map
@@ -158,7 +158,7 @@ class DTLModel(CostModel):
             raise Exception("ranger-dtl-U failed")
         if ret != 0:
             raise Exception("ranger-dtl-U failed with returncode %d" % ret)
-        
+
         # parse output
         cost = None
         for line in proc.stdout:
@@ -167,5 +167,5 @@ class DTLModel(CostModel):
                 cost = int(m.group("cost"))
                 break
         assert cost is not None
-        
+
         return cost

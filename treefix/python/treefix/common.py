@@ -10,7 +10,7 @@ def add_common_options(parser,
                        treeext=False, alignext=False,
                        clade=False):
     """Add common options to parser"""
-    
+
     if infiles:
         parser.add_option("-i", "--input", dest="input",
                           action="append",
@@ -55,7 +55,7 @@ def move_option(parser, opt_str, opt_grp):
 def check_req_options(parser, options,
                       species=True, clade=True):
     """Check if required options are present"""
-    
+
     if species and ((not options.stree) or (not options.smap)):
         parser.error("--stree and --smap are required")
     if clade and (not options.clade):
@@ -63,7 +63,7 @@ def check_req_options(parser, options,
 
 def get_input_files(parser, options, args):
     """Determine input files from options"""
-    
+
     infiles = []
     if options.input:
         for arg in options.input:
@@ -78,7 +78,7 @@ def get_input_files(parser, options, args):
         files.extend(map(lambda fn: fn.rstrip("\n"), infile.readlines()))
     if len(files) == 0:
         parser.error("must specify input file(s)")
-        
+
     return files
 
 #=============================
@@ -86,14 +86,14 @@ def get_input_files(parser, options, args):
 
 def get_clade(names, stree):
     """Get clade of given species"""
-    
+
     head = treelib.lca([stree.nodes[name] for name in names])
     assert sorted(names) == sorted(node.name for node in head.leaves())
     return [head] + head.descendants()
 
 def read_clades(filename, stree):
     """Read a clade file"""
-    
+
     clades = {}
     for toks in util.DelimReader(filename):
         name, sps = toks[0], toks[1].split(',')
@@ -106,7 +106,7 @@ def label_clades(gtree, recon, clades):
     Find all subclades by finding all branches separating clade,
     e.g. node is in subtree of clade but parent node is not.
     """
-    
+
     nodes = {}
     for cname, clade in clades.iteritems():
         for node in gtree.preorder():

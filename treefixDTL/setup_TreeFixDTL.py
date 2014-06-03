@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# 
+#
 # setup for TreeFix-DTL library packages
 # (if TreeFix has already been installed)
 #
@@ -26,7 +26,7 @@ setup(
     author_email='yjw@mit.edu',
 #    url='http://compbio.mit.edu/treefix-dtl/',
 #    download_url='http://compbio.mit.edu/treefix-dtl/pub/sw/treefixDTL-%s.tar.gz' % VERSION,
-    
+
     classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Environment :: Console',
@@ -38,7 +38,7 @@ setup(
           'Programming Language :: Python',
           'Topic :: Education',
           ],
-    
+
     package_dir = {'': 'python'},
     packages=[],
     py_modules=['treefix.treefixDTL', 'treefix.models.rangerdtlmodel'],

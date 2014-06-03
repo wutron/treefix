@@ -24,7 +24,7 @@ cmd = "genetreereport.linux"
 
 class CoalModel(CostModel):
     """Computes deep coalescence costs"""
-    
+
     def __init__(self, extra):
         """Initializes the model"""
         CostModel.__init__(self, extra)
@@ -33,7 +33,7 @@ class CoalModel(CostModel):
         self.mincost = 0
 
         CostModel._parse_args(self, extra)
-        
+
         # make temporary file
         fd, self.treefile = tempfile.mkstemp()
         os.close(fd)
@@ -70,7 +70,7 @@ class CoalModel(CostModel):
         ret = proc.wait()
         if ret != 0:
             raise Exception("genetreereport failed with returncode %d" % ret)
-                
+
         # parse output
         i = None
         n = len(edges)
@@ -86,7 +86,7 @@ class CoalModel(CostModel):
                     costs[i] = int(m.groups()[0])
         assert all(map(lambda x: x is not None, costs))
 
-        # find minimum cost tree    
+        # find minimum cost tree
         ndx, mincost = min(enumerate(costs), key=lambda it:it[1])
         minroot = edges[ndx]
         if edge != minroot:
@@ -100,10 +100,10 @@ class CoalModel(CostModel):
             return gtree, mincost
         else:
             return gtree
- 
-    def compute_cost(self, gtree):   
+
+    def compute_cost(self, gtree):
         """Returns the deep coalescence cost"""
-       
+
         # write species tree and gene tree using species map
         treeout = util.open_stream(self.treefile, 'w')
         self.stree.write(treeout, oneline=True, writeData=lambda x: "")
@@ -122,7 +122,7 @@ class CoalModel(CostModel):
         ret = proc.wait()
         if ret != 0:
             raise Exception("genetreereport failed with returncode %d" % ret)
-                
+
         # parse output
         cost = None
         for line in proc.stdout:

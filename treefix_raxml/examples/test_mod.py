@@ -55,7 +55,7 @@ if options.niter < 1:
 
 if len(args) != 1:
     parser.error("must specify input file")
-    
+
 #=============================
 # main file
 
@@ -95,7 +95,7 @@ for i in xrange(options.niter):
         util.log("worse likelihood?: %s" % False)  # better topology (higher likelihood)
     else:
         util.log("worse likelihood?: %s" % True)   # worse topology (higher likelihood)
-        
+
         if p < options.pval:
             util.log("significant?: %s" % True)    # statistically significant (significantly worse likelihood)
         else:

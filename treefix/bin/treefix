@@ -34,23 +34,23 @@ VERSION = treefix.PROGRAM_VERSION_TEXT
 
 def parse_args():
     """parse input arguments"""
-    
+
     parser = optparse.OptionParser(
         usage = "usage: %prog [options] <gene tree> ...",
-        
+
         version = "%prog " + VERSION,
 
         description =
              "TreeFix is a phylogenetic program for improving gene tree reconstructions using " +
              "a test statistic for likelihood equivalence and a species tree aware cost function. " +
              "See http://compbio.mit.edu/treefix for details.",
-             
+
         epilog =
              "Written by Yi-Chieh Wu (yjw@mit.edu), Massachusetts Institute of Technology. " +
              "(c) 2011. Released under the terms of the GNU General Public License.")
 
     grp_io = optparse.OptionGroup(parser, "Input/Output")
-    common.add_common_options(grp_io, 
+    common.add_common_options(grp_io,
                               infiles=True, reroot=True,
                               stree=True, smap=True,
                               alignext=True)
@@ -118,7 +118,7 @@ def parse_args():
                           help="number of bootstraps to perform (default: 1)")
     grp_search.add_option("--seed", dest="seed",
                           metavar="<seed>",
-                          type="int", 
+                          type="int",
                           help="seed value for random generator")
     grp_search.add_option("--niter", dest="niter",
                           metavar="<# iterations>",
@@ -171,8 +171,6 @@ def parse_args():
 
     # input gene tree files
     treefiles = common.get_input_files(parser, options, args)
-    if len(treefiles) == 0:
-        parser.error("must specify input file(s)")
 
     # required options
     common.check_req_options(parser, options, clade=False)
@@ -245,20 +243,20 @@ def log_tree(gtree, log, oneline=True, writeDists=False):
             treelib.draw_tree(gtree, out=treeout, minlen=5, maxlen=5)
         log.log("tree:\n %s\n" % treeout.getvalue())
     treeout.close()
-    
+
 #==========================================================
 # phylogeny functions
 
 def unroot(gtree, newCopy=True):
     """returns unrooted gtree (with internal root always at the same place)"""
-   
+
     if newCopy:
         gtree = gtree.copy()
     treelib.unroot(gtree, newCopy=False)
     treelib.reroot(gtree, gtree.nodes[sorted(gtree.leaf_names())[0]].parent.name,
                    onBranch=False, newCopy=False)
     return gtree
-      
+
 #==========================================================
 # special cases
 
@@ -269,7 +267,7 @@ def check_small_tree(gtree, rooted=False):
     global options
     if options.verbose >= 1:
         global log
-   
+
     # log
     if options.verbose >= 1:
         log.start("Checking for small input gene tree"); log.log("")
@@ -289,7 +287,7 @@ def check_small_tree(gtree, rooted=False):
     # log
     if options.verbose >= 1:
         log.stop(); log.log("")
-    
+
     return False
 
 def check_input_tree(gtree, stree, gene2species, smodule):
@@ -301,7 +299,7 @@ def check_input_tree(gtree, stree, gene2species, smodule):
     global gtimer, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
     if options.verbose >= 1:
         global log
-        
+
     # log
     if options.verbose >= 1:
         log.start("Checking input gene tree cost"); log.log("")
@@ -324,7 +322,7 @@ def check_input_tree(gtree, stree, gene2species, smodule):
     # log
     if options.verbose >= 1:
         log.stop(); log.log("")
-        
+
     return False
 
 def check_congruent_tree(gtree, stree, gene2species,
@@ -337,7 +335,7 @@ def check_congruent_tree(gtree, stree, gene2species,
     global gtimer, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
     if options.verbose >= 1:
         global log
-    
+
     # check if one-to-one
     sps = stree.leaf_names()
     genes = gtree.leaf_names()
@@ -347,7 +345,7 @@ def check_congruent_tree(gtree, stree, gene2species,
     # log
     if options.verbose >= 1:
         log.start("Checking congruent gene tree"); log.log("")
-        
+
     # make congruent gene tree
     mintree = phylo.stree2gtree(stree, genes, gene2species)
     for node in mintree:
@@ -375,7 +373,7 @@ def check_congruent_tree(gtree, stree, gene2species,
             reject = True
         else:
             reject = False
-            
+
         # log
         if options.verbose >= 1:
             log.log("congruent")
@@ -442,7 +440,7 @@ def search_landscape(gtree, stree, gene2species, aln,
     gtimer.start()
     cost0 = smodule.compute_cost(gtree)
     runtime_cost += gtimer.stop()
-    
+
     # special case: check for one-to-one mapping and if congruent gene tree achieves minimum cost
     flag, mintree = check_congruent_tree(gtree, stree, gene2species,
                                          module, smodule)
@@ -455,7 +453,7 @@ def search_landscape(gtree, stree, gene2species, aln,
         log.log("search: cost\t= %.6g" % cost0)
         log_tree(gtree, log)
         log_tree(gtree, log, oneline=False)
-    
+
     # user tree statistics
     if usertree:
         searched_user_rooted = searched_user_rooted0
@@ -472,10 +470,10 @@ def search_landscape(gtree, stree, gene2species, aln,
             log.log("user: pval\t= %.6g" % userpval)
             log.log("user: Dlnl\t= %.6g" % userDlnl)
             log.log("\n")
-    
+
     # initialize min values
     mintree, mincost, minpval, minDlnl = tree0, cost0, 1, 0
-    
+
     # search functions
     search = phylo.TreeSearchMix(gtree)
     search.add_proposer(phylo.TreeSearchNni(gtree), 0.5)
@@ -491,7 +489,7 @@ def search_landscape(gtree, stree, gene2species, aln,
             if options.verbose >= 1:
                 log.log("search: break (maxtime reached)\n")
             break
-        
+
         # store initial search tree
         if rooted:
             treehash1 = phylo.hash_tree(search.tree)
@@ -564,7 +562,7 @@ def search_landscape(gtree, stree, gene2species, aln,
                 log.log("prescreen: cost\t= %.6g" % cost)
                 log_tree(gtree, log)
                 log.log("")
-            
+
             # store to pool if unique
             treehash_rooted = phylo.hash_tree(gtree)
             treehash_unrooted = phylo.hash_tree(unroot(gtree, newCopy=True))
@@ -575,7 +573,7 @@ def search_landscape(gtree, stree, gene2species, aln,
                 searched_user_rooted = True
             if (usertree) and (not searched_user_unrooted) and (treehash_unrooted == usertreehash_unrooted):
                 searched_user_unrooted = True
-            
+
             # update mincost of pool and decide how to continue proposals from here
             if cost < mincost_pool:
                 # make more proposals off this one
@@ -735,20 +733,20 @@ def search_landscape(gtree, stree, gene2species, aln,
         log.log("")
 
     # return optimum
-    return mintree   
+    return mintree
 
 #==========================================================
 # main
 
 def main():
     """main"""
-    
+
     # global variables
     global options, seed
     global DEBUG_SKIP_LIK, DEBUG_SKIP_COST, DEBUG_COMPUTE_ALL_LIK
     global gtimer, runtime_start, runtime_prop, runtime_reconroot, runtime_cost, runtime_stat
     global treehash0, usertree
-   
+
     # parse arguments
     options, treefiles = parse_args()
     if options.verbose >= 1:
@@ -775,7 +773,7 @@ def main():
     if folder != '':
         exec "import %s" % folder in locals()
     smodule = eval("%s(options.sextra)" % options.smodule)
-   
+
     # read species tree
     try:
         stree = treelib.read_tree(options.stree)
@@ -800,8 +798,8 @@ def main():
 
         log.log("TreeFix version: %s\n" % VERSION)
         log.log("TreeFix executed with the following arguments:")
-        log.log("%s %s\n" % (os.path.basename(sys.argv[0]), 
-                             ' '.join(map(lambda x: x if x.find(' ') == -1 else "\"%s\"" % x, 
+        log.log("%s %s\n" % (os.path.basename(sys.argv[0]),
+                             ' '.join(map(lambda x: x if x.find(' ') == -1 else "\"%s\"" % x,
                                           sys.argv[1:]))))
 
         log.log("Likelihood Model:\t%s (%s)" % (options.module, module.VERSION))
@@ -911,7 +909,7 @@ def main():
             usertreehash = usertreehash_rooted if rooted else usertreehash_unrooted
         else:
             usertree = None
-        
+
         # store input tree and whether input tree matches user tree
         treehash0_rooted = phylo.hash_tree(gtree)
         treehash0_unrooted = phylo.hash_tree(unroot(gtree, newCopy=True))
@@ -938,7 +936,7 @@ def main():
                 if options.verbose >= 1:
                     log.log("boot: break (maxtime reached)\n")
                 break
-        
+
             # get bootstrapped alignment (equal number of columns, sample with replacement)
             if boot:
                 if options.verbose >= 1:
@@ -953,7 +951,7 @@ def main():
                 baln = alignlib.subalign(aln, cols)
             else:
                 baln = aln
-                    
+
             # search
             mintree = search_landscape(gtree, stree, gene2species, baln,
                                        module, smodule, rooted,
@@ -973,7 +971,7 @@ def main():
             out.close()
             if options.verbose >= 1:
                 log.start("boot: final"); log.log("")
-            
+
             # search
             mintree = search_landscape(gtree, stree, gene2species, aln,
                                        module, smodule, rooted)
@@ -984,7 +982,7 @@ def main():
             # log final tree with bootstraps
             log_tree(mintree, log)
             log_tree(mintree, log, oneline=False)
-            
+
             # output tree
             mintree.write(outfile)
             if options.verbose >= 1:

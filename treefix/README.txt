@@ -8,17 +8,17 @@ ABOUT
 TreeFix is a phylogenetic program that improves existing gene trees using
 the species tree.
 
-TreeFix citation: 
-Wu, Rasmussen, Bansal, Kellis. TreeFix: Statistically Informed 
+TreeFix citation:
+Wu, Rasmussen, Bansal, Kellis. TreeFix: Statistically Informed
 Gene Tree Error Correction Using Species Trees.
 Systematic Biology (62)1:110-120, 2013.
 
 
 
-By default, TreeFix uses p-values based on the SH test statistic, 
+By default, TreeFix uses p-values based on the SH test statistic,
 as computed by RAxML.  If you use this default, please also cite
 
-Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses 
+Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses
 with Thousands of Taxa and Mixed Models. Bioinformatics, 22(21):2688-2690, 2006
 
 The original RAxML source code (v7.0.4) is written by Alexandros Stamatakis

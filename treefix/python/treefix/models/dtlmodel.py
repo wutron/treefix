@@ -87,7 +87,7 @@ class DTLModel(CostModel):
         ret = proc.wait()
         if ret != 0:
             raise Exception("DTL failed with returncode %d" % ret)
-        
+
         # parse output
         i = 0
         n = len(edges)
@@ -100,7 +100,7 @@ class DTLModel(CostModel):
                 i += 1
         assert all(map(lambda x: x is not None, costs))
 
-        # find minimum cost tree    
+        # find minimum cost tree
         ndx, mincost = min(enumerate(costs), key=lambda it:it[1])
         minroot = edges[ndx]
         if edge != minroot:
@@ -115,7 +115,7 @@ class DTLModel(CostModel):
         else:
             return gtree
 
-    def compute_cost(self, gtree):   
+    def compute_cost(self, gtree):
         """Returns the DTL cost"""
 
         # write species tree and gene tree using species map
@@ -138,7 +138,7 @@ class DTLModel(CostModel):
         ret = proc.wait()
         if ret != 0:
             raise Exception("DTL failed with returncode %d" % ret)
-                       
+
         # parse output
         cost = None
         for line in proc.stdout.:
@@ -147,5 +147,5 @@ class DTLModel(CostModel):
                 cost = int(toks[1])
                 break
         assert cost is not None
-        
+
         return cost

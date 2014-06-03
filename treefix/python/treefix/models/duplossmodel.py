@@ -16,7 +16,7 @@ from compbio import phylo
 
 class DupLossModel(CostModel):
     """Computes Dup/Loss costs"""
-    
+
     def __init__(self, extra):
         """Initializes the model"""
         CostModel.__init__(self, extra)
@@ -47,15 +47,15 @@ class DupLossModel(CostModel):
             self.parser.error("-L/--losscost must be >= 0")
 
         # ensure gtree and stree are both rooted and binary
-        if (not treelib.is_rooted(gtree)) and (not treelib.is_binary(gtree)):
+        if not (treelib.is_rooted(gtree) and treelib.is_binary(gtree)):
             raise Exception("gene tree must be rooted and binary")
-        if (not treelib.is_rooted(stree)) and (not treelib.is_binary(stree)):
+        if not (treelib.is_rooted(stree) and treelib.is_binary(stree)):
             raise Exception("species tree must be rooted and binary")
         try:
             junk = phylo.reconcile(gtree, stree, gene2species)
         except:
             raise Exception("problem mapping gene tree to species tree")
-        
+
     def recon_root(self, gtree, newCopy=True, returnCost=False):
         """Reroots the tree by minimizing the duplication/loss cost"""
         return phylo.recon_root(gtree, self.stree, self.gene2species,

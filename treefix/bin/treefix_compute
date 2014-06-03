@@ -107,8 +107,6 @@ if options.type == "cost":
 
 # determine input files
 treefiles = common.get_input_files(parser, options, args)
-if len(treefiles) == 0:
-    parser.error("must specify input file(s)")
 
 #=============================
 # main

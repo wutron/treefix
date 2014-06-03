@@ -9,10 +9,10 @@ RAxML is a popular phylogenetic program for gene tree reconstruction.
 TreeFix-RAxML simply uses SWIG to provide a Python wrapper.
 
 RAxML citation:
-Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses 
+Stamatakis. RAxML-VI-HPC: Maximum Likelihood-based Phylogenetic Analyses
 with Thousands of Taxa and Mixed Models. Bioinformatics 22(21):2688-2690, 2006
 
-TreeFix-RAxML citation: 
+TreeFix-RAxML citation:
 Wu, Rasmussen, Bansal, Kellis. TreeFix: statistically informed
 gene tree error correction using species trees. Systematic Biology. Accepted.
 

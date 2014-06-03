@@ -24,16 +24,16 @@ from compbio import phylo
 
 class DLCModel(CostModel):
     """Computes Dup/Loss/Coal cost
-    
+
     Note: This model is HIGHLY LIKELY to overfit the gene tree
     (inferring ILS over dup/loss).  It also does not correctly handle
     daughter lineages (for duplications) and therefore may violate
     bounded coalescent assumptions."""
-    
+
     def __init__(self, extra):
         """Initializes the model"""
         CostModel.__init__(self, extra)
-        
+
         self.VERSION = "0.1.0"
         self.mincost = 0
 
@@ -72,7 +72,7 @@ class DLCModel(CostModel):
                              default=0.5, type="float",
                              help="Robinson-Foulds error threshold between gene tree and locus tree")
         parser.add_option_group(grp_search)
-    
+
         self.parser = parser
 
         CostModel._parse_args(self, extra)
@@ -92,7 +92,7 @@ class DLCModel(CostModel):
             self.parser.error("-C/--coalcost must be >= 0: " + str(self.coalcost))
         #if self.output is None:
         #    self.parser.error("-o/--output must be specified")
-        
+
         if self.niter < 1:
             self.parser.error("--niter must be >= 1: %d" % options.niter)
         if self.rf < 0 or self.rf > 1:
@@ -103,11 +103,11 @@ class DLCModel(CostModel):
         def walk(node):
             # copy of node
             newnode = treelib.TreeNode(node.name)
-            
+
             # recurse
             for child in node.children:
                 ltree.add_child(newnode, walk(child))
-                
+
             return newnode
         if gtree.root:
             walk(gtree.root)
@@ -120,10 +120,10 @@ class DLCModel(CostModel):
         self.search = phylo.TreeSearchMix(None)
         self.search.add_proposer(phylo.TreeSearchNni(None), 0.5)
         self.search.add_proposer(phylo.TreeSearchSpr(None), 0.5)
-        
+
     def compute_cost(self, gtree):
         """Returns the duplication-loss-coalescence cost"""
-        
+
         # start with locus tree equal to gene tree
         ltree = self.locustree
         treelib.set_tree_topology(ltree, gtree)
@@ -172,7 +172,7 @@ class DLCModel(CostModel):
                 cost = dlcost + coalcost
             else:
                 cost = self._compute_cost_helper(gtree, ltree)
-            
+
             # update min cost and decide how to continue proposals from here
             if cost < mincost:
                 minltree = ltree if randvec[i] < self.freconroot else ltree.copy()
@@ -189,7 +189,7 @@ class DLCModel(CostModel):
     def _compute_cost_helper(self, gtree, ltree):
         """Helper function to compute DLC cost from coalescent tree (gene tree) -> locus tree -> species tree"""
         return self._compute_coalcost(gtree, ltree) + self._compute_duplosscost(ltree)
-    
+
     def _compute_coalcost(self, gtree, ltree):
         """Returns deep coalescent cost from coalescent tree (gene tree) to locus tree
 

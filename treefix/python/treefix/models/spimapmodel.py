@@ -20,14 +20,14 @@ from compbio import phylo, fasta, alignlib
 
 class SpimapModel(CostModel):
     """Computes SPIMAP costs"""
-   
+
     def __init__(self, extra):
         """Initializes the model"""
         CostModel.__init__(self, extra)
 
         self.VERSION = "0.1.0"
         self.mincost = -util.INF
-       
+
         parser = optparse.OptionParser(prog="SpimapModel")
         parser.add_option("-a", "--align", dest="align",
                           metavar="<alignment fasta>",
@@ -64,15 +64,15 @@ class SpimapModel(CostModel):
                                default=1.0, type="float",
                                help="lambda param of pre-speciation distribution (default: 1.0)")
         parser.add_option_group(grp_duploss)
-                
+
         self.parser = parser
 
         CostModel._parse_args(self, extra)
-    
+
     def optimize_model(self, gtree, stree, gene2species):
         """Optimizes the model"""
         CostModel.optimize_model(self, gtree, stree, gene2species)
-        
+
         #=============================
         # read sequences
         if not self.align:
@@ -117,7 +117,7 @@ class SpimapModel(CostModel):
                     maxk = k
 
             self.kappa = maxk
-            
+
     def recon_root(self, gtree, newCopy=True, returnCost=False):
         """
         Reroots the tree by minimizing the duplication/loss cost

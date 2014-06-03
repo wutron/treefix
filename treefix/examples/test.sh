@@ -3,7 +3,7 @@
 # This is an example of how to use TreeFix to correct a gene tree topology.
 #
 
-# Make sure tools are compiled and installed before running the commands in 
+# Make sure tools are compiled and installed before running the commands in
 # this tutorial.  See INSTALL.txt for more information.
 
 # Or you can run from the source directory:
@@ -108,19 +108,19 @@ rm sim-fungi/0/0.nt.raxml.treefix*
 #=============================================================================
 # Using other parameters in the likelihood or reconciliation cost modules
 
-# By default, the likelihood module used by TreeFix assumes a GTRGAMMA model of 
-# sequence evolution and a model optimization precision of eps=2.0.  
+# By default, the likelihood module used by TreeFix assumes a GTRGAMMA model of
+# sequence evolution and a model optimization precision of eps=2.0.
 # To change this, add the following to the treefix command:
 #     -e '-m <model> -e <eps>'
 # The specified model must be supported by RAxML.
 
-# By default, the reconciliation cost module used by TreeFix assumes equal costs 
-# (D=1, L=1) for inferred (duplication-loss) events.  
+# By default, the reconciliation cost module used by TreeFix assumes equal costs
+# (D=1, L=1) for inferred (duplication-loss) events.
 # To change this, add the following to the treefix command:
 #     -E '-D <dup cost> -L <loss cost>'
 # The costs must be non-negative.
 
-# Be sure to watch the quotes.  The '-e' ('-E') switch tells treefix to pass the 
+# Be sure to watch the quotes.  The '-e' ('-E') switch tells treefix to pass the
 # following options to the module used for likelihood (reconciliation cost) calculation.
 # See also "test RAxML module" and "test dup/loss module" below.
 

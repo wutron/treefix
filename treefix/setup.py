@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# 
+#
 # setup for TreeFix library packages
 #
 # use the following to install:
@@ -35,7 +35,7 @@ setup(
     author_email='yjw@mit.edu',
 #    url='http://compbio.mit.edu/treefix/',
 #    download_url='http://compbio.mit.edu/treefix/pub/sw/treefix-%s.tar.gz' % VERSION,
-    
+
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
@@ -47,7 +47,7 @@ setup(
         'Programming Language :: Python',
         'Topic :: Education',
         ],
-    
+
     package_dir = {'': 'python'},
     packages=['treefix',
               'treefix.models',

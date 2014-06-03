@@ -67,7 +67,7 @@ class RAxMLModel(StatModel):
 
         os.remove(treefile)
         os.remove(seqfile)
-        
+
     def compute_lik_test(self, gtree, stat="SH", alternative=None):
         """Computes the test statistic 'stat' using RAxML likelihoods"""
         return self._raxml.compute_lik_test(gtree, stat, alternative)

@@ -30,7 +30,7 @@ COMPBIO_SRC_FILES = __init__ \
 VERSIONS = versions.txt
 
 # all
-all: includepy 
+all: includepy
 
 # copy subset of python modules for packaging with treefix
 includepy: versions

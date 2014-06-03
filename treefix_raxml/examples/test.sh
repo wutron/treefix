@@ -3,7 +3,7 @@
 # This is an example of how to use TreeFix-RAxML to compute the SH statistic.
 #
 
-# Make sure tools are compiled and installed before running the commands in 
+# Make sure tools are compiled and installed before running the commands in
 # this tutorial.  See INSTALL.txt for more information.
 
 # Or you can run from the source directory:
@@ -18,7 +18,7 @@ export PYTHONPATH=$PYTHONPATH:../python
 # Compute the SH statistics for variations on an original gene trees.
 
 # Usage: ./test_mod.py [OPTION] <gene tree>
-# 
+#
 # Options:
 #  -h, --help            show this help message and exit
 #  -T <tree file extension>, --treeext=<tree file extension>

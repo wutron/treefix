@@ -22,7 +22,7 @@ usage = "usage: %prog [options] <gene tree> ..."
 parser = optparse.OptionParser(usage=usage)
 
 grp_io = optparse.OptionGroup(parser, "Input/Output")
-common.add_common_options(grp_io, 
+common.add_common_options(grp_io,
                           infiles=True, reroot=True,
                           stree=True, smap=True,
                           alignext=True)
@@ -115,15 +115,13 @@ if kshort <= 0:
 
 # determine gene tree files
 treefiles = common.get_input_files(parser, options, args)
-if len(treefiles) == 0:
-    parser.error("must specify input file(s)")
 
 #=============================
 # branch functions
 
 def find_branch_factors(gtree):
     """Compute branch factors (dist / avg dist) for all nodes in gtree."""
-    
+
     # total and average branch length
     tot = sum(node.dist for node in gtree)
     avg = float(tot)/len(gtree.nodes)
@@ -136,7 +134,7 @@ def find_branch_factors(gtree):
 
 def get_long_branches(gtree, branch_factors):
     """Returns a list of node names in gtree that have long branches (excluding root)."""
-    
+
     longbranches = [node.name for (node,kdist) in branch_factors.iteritems() if kdist >= klong]
 
     children = gtree.root.children
@@ -214,7 +212,7 @@ def unroot(gtree, newCopy=True):
 recon_cache = {}
 def recon_root(gtree, stree, gene2species, newCopy=True, returnCost=False):
     """cached version of phylo.recon_root"""
-    
+
     # can hash with unrooted version since recon_root first unroots anyways
     treehash = phylo.hash_tree(unroot(gtree, newCopy=True))
     if treehash in recon_cache:
@@ -236,11 +234,11 @@ def recon_root(gtree, stree, gene2species, newCopy=True, returnCost=False):
 duploss_cache = {}
 def count_dup_loss(gtree, stree, gene2species):
     """cached version of phylo.count_dup_loss"""
-    
+
     treehash = phylo.hash_tree(gtree)
     if treehash in duploss_cache:
         return duploss_cache[treehash]
-    
+
     recon = phylo.reconcile(gtree, stree, gene2species)
     events = phylo.label_events(gtree, recon)
     cost = phylo.count_dup_loss(gtree, stree, recon, events)
@@ -286,7 +284,7 @@ def try_spr(gtree, subtree, newpos):
     Return True if dup/loss count of new tree <= dup/loss count of original tree.
     """
     assert (subtree in gtree) and (newpos in gtree)
-    
+
     # original dup/loss count (only need to consider subtree from lca(subtree, newpos))
     lca = treelib.lca([subtree, newpos])
     if options.noquick:
@@ -319,7 +317,7 @@ def try_reroot(gtree, subtree, newroot):
     Return True if dup/loss count of new tree <= dup/loss count of original tree.
     """
     assert (subtree in gtree) and (newroot in gtree) and (newroot in subtree.descendants())
-    
+
     node = subtree
     subtree = treelib.subtree(gtree, node)
 
@@ -388,7 +386,7 @@ def search_tops(gtree, longbranches, head=True, nrearr=0):
 
     node = gtree.nodes[longbranches[0]]
     if options.verbose >= 3: log.start("Search with %d long branches at %s" % (len(longbranches), node.name))
-    
+
     if head:
         # no change
         if options.verbose >= 3: log.log("Working on head of %s" % node.name)
@@ -530,19 +528,19 @@ rooted = eval("%s.rooted" % options.module)
 # process genes trees
 for treefile in treefiles:
     if options.verbose >= 1: log.start("Working on file '%s'" % treefile)
-    
+
     # setup files
     alnfile = util.replace_ext(treefile, options.oldext, options.alignext)
     outfile = util.replace_ext(treefile, options.oldext, options.newext)
     out = util.open_stream(outfile, "w")
-    
+
     # read trees
     gtrees = treelib.read_trees(treefile)
     single_tree = len(gtrees) == 1
 
     for treendx, gtree in enumerate(gtrees):
         if options.verbose >= 1: log.start("Working on file '%s', tree %d" % (treefile, treendx))
-        
+
         # special cases: no need to fix topology or no branch lengths
         special = False
         if len(gtree.leaves()) <= 2 or\
@@ -582,7 +580,7 @@ for treefile in treefiles:
         eval("%s.init()" % options.module)
         eval("%s.optimize_model(treefile, alnfile, options.extra)" % options.module)
         if options.verbose >= 1: log.stop(); log.log('')
-        
+
         # search topologies
         treendx, mintree, mincost, minnrearr, minpval, minDlnl = 0, gtree, cost0, 0, None, 0
         for treendx, (tree, nrearr) in enumerate(search_tops(gtree, longbranches)):

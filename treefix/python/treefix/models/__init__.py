@@ -46,21 +46,21 @@ class StatModel(Model):
     def compute_lik_test(self, gtree, stat, alternative=None):
         """
         Computes the test statistic for tree likelihood equivalence
-        
+
         Returns the p-value and Dlnl (delta lnl = best lnl - current lnl).
         Some test statistics require the user to specify the alternative hypothesis.
         """
         raise
-       
+
 
 class CostModel(Model):
     def __init__(self, extra):
         """Initializes the model"""
         Model.__init__(self, extra)
-        
+
         self.mincost = -util.INF
         self.parser = None
-    
+
     def optimize_model(self, gtree, stree, gene2species):
         """Optimizes the underlying model in the module given the tree"""
         self.stree = stree
@@ -84,7 +84,7 @@ class CostModel(Model):
         treelib.reroot(gtree,
                        gtree.nodes[sorted(gtree.leaf_names())[0]].parent.name,
                        onBranch=False, newCopy=False)
-        
+
         # make rerooting order consistent using hash ordering
         phylo.hash_order_tree(gtree, self.gene2species)
 
@@ -112,7 +112,7 @@ class CostModel(Model):
             if sorted(edge) == rootedge:
                 continue
             rootedge = sorted(edge)
-            
+
             node1, node2 = edge
             if node1.parent != node2:
                 node1, node2 = node2, node1
@@ -139,7 +139,7 @@ class CostModel(Model):
             if cost < mincost:
                 mincost = cost
                 minroot = edge
-        
+
         # root tree by minroot
         if edge != minroot:
             node1, node2 = minroot

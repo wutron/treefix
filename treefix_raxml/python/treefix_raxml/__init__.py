@@ -35,10 +35,10 @@ except ImportError:
 
 class RAxML:
     """Wrapper for RAxML functions"""
-    
+
     #=========================================
     # constructors/destructors
-    
+
     def __init__(self):
         self.rooted = False # RAxML uses unrooted trees
         self.adef = raxml.new_analdef()
@@ -63,7 +63,7 @@ class RAxML:
 
         tree.write(fw, oneline=True); fw.write('\n')
         fw.close()
-        
+
         raxml.read_tree(fr, self.tr, self.adef)
         fr.close()
 
@@ -95,7 +95,7 @@ class RAxML:
         # set flags
         self.optimal = True
 
-    #=========================================    
+    #=========================================
     # test statistics
 
     def compute_lik_test(self, tree, test="SH", alternative=None):

@@ -47,8 +47,6 @@ common.check_req_options(parser, options)
 
 # determine gene tree files
 treefiles = common.get_input_files(parser, options, args)
-if len(treefiles) == 0:
-    parser.error("must specify input file(s)")
 
 #=============================
 # functions
@@ -58,7 +56,7 @@ def process_tree(gtree, stree, gene2species,
     nodes = common.label_clades(gtree, recon, clades)
 
     if options.verbose >= 1: log.start("Processing clades")
-    
+
     # for each branch
     for node,cname in nodes.iteritems():
         # get subtree (skip if subtree has single leaf)
@@ -82,12 +80,12 @@ def process_tree(gtree, stree, gene2species,
         del events[node]
         for node1 in subtree:
             recon[node1] = newrecon[node1]
-            events[node1] = newevents[node1]    
+            events[node1] = newevents[node1]
 
         if options.verbose >= 2:
             newcost = phylo.count_dup_loss(gtree, stree, recon, events)
             log.log("Rerooted %s (%s) -- oldcost: %d, newcost: %d" % (node.name, cname, cost, newcost))
-            
+
     if options.verbose >= 1: log.stop()
 
 
@@ -116,18 +114,18 @@ if options.verbose >= 1:
 # process genes trees
 for treefile in treefiles:
     if options.verbose >= 1: log.start("Working on file '%s'" % treefile)
-    
+
     # setup files
-    outfile = util.replace_ext(treefile, options.oldext, options.newext)    
+    outfile = util.replace_ext(treefile, options.oldext, options.newext)
     out = util.open_stream(outfile, "w")
-    
+
     # read trees
     gtrees = treelib.read_trees(treefile)
     single_tree = len(gtrees) == 1
-    
+
     for treendx, gtree in enumerate(gtrees):
         if options.verbose >= 1: log.start("Working on file '%s', tree %d" % (treefile, treendx))
-        
+
         # special case: no rerooting needed
         if len(gtree.leaves()) <= 2:
             if options.verbose >= 1:
@@ -140,7 +138,7 @@ for treefile in treefiles:
         for node in gtree:
             if "boot" in node.data:
                 del node.data["boot"]
-                
+
         # reroot
         if options.reroot:
             phylo.recon_root(gtree, stree, gene2species, newCopy=False)
