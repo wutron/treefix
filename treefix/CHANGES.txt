@@ -1,6 +1,11 @@
 TreeFix Change Log
 -----------------------
 
+treefix-1.1.10 (2014/06/19)
+-----------------------
+-- update libraries
+
+
 treefix-1.1.9 (2014/04/15)
 -----------------------
 -- use one-sided SH test in raxmlmodel
