@@ -1,2 +1,2 @@
-rasmus	5e85db37e6cef917de6cec8bd75a96a9f3bdc1d2
-compbio	5e85db37e6cef917de6cec8bd75a96a9f3bdc1d2
+rasmus	f08a7daff0d50938527ee6d6bf2f1843e5271f52
+compbio	f08a7daff0d50938527ee6d6bf2f1843e5271f52

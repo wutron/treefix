@@ -92,7 +92,7 @@ def parse_args():
     parser.add_option_group(grp_smodel)
 
     grp_search = optparse.OptionGroup(parser, "Search Options")
-    grp_search.add_option("--seed", dest="seed",
+    grp_search.add_option("-x", "--seed", dest="seed",
                           metavar="<seed>",
                           type="int", 
                           help="seed value for random generator")

@@ -116,7 +116,7 @@ def parse_args():
                           metavar="<# bootstraps>",
                           default=1, type="int",
                           help="number of bootstraps to perform (default: 1)")
-    grp_search.add_option("--seed", dest="seed",
+    grp_search.add_option("-x", "--seed", dest="seed",
                           metavar="<seed>",
                           type="int",
                           help="seed value for random generator")

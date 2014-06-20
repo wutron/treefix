@@ -10,6 +10,8 @@ import optparse
 
 # rasmus libraries
 from rasmus import treelib
+
+# compbio libraries
 from compbio import phylo
 
 #=============================================================================

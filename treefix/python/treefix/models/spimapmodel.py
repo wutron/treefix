@@ -14,6 +14,8 @@ import optparse
 
 # rasmus libraries
 from rasmus import treelib, util
+
+# compbio libraries
 from compbio import phylo, fasta, alignlib
 
 #=============================================================================

@@ -14,6 +14,9 @@ import tempfile
 # rasmus libraries
 from rasmus import treelib, util
 
+# compbio libraries
+from compbio import phylo
+
 #=============================================================================
 # command
 

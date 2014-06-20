@@ -2,8 +2,13 @@
 # Python module for statistical models and reconciliation costs
 #
 
+# python libraries
 import optparse, sys
+
+# rasmus libraries
 from rasmus import treelib, util
+
+# compbio libraries
 from compbio import phylo
 
 class Model(object):
