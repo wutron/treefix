@@ -980,8 +980,9 @@ def main():
             phylo.add_bootstraps(mintree, treelib.iter_trees(boottreefile), rooted=True)
 
             # log final tree with bootstraps
-            log_tree(mintree, log)
-            log_tree(mintree, log, oneline=False)
+            if options.verbose >= 1:
+                log_tree(mintree, log)
+                log_tree(mintree, log, oneline=False)
 
             # output tree
             mintree.write(outfile)

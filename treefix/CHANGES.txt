@@ -1,6 +1,11 @@
 TreeFix Change Log
 -----------------------
 
+treefix-1.1.11 (2018/07/03)
+-----------------------
+-- fix minor bug in writing to log on verbose=0
+
+
 treefix-1.1.10 (2014/06/19)
 -----------------------
 -- update libraries
